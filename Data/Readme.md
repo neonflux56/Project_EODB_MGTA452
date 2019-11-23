@@ -17,6 +17,7 @@ Convert to multicategory, then one hot encoding
 ****3. cost - Cost to register a business is normalized by presenting it as a percentage of gross national income (GNI) per capita.
 Preprocessing required-
 
+
 2006-2019
 
 4. LowerS - Ratio of people entering last grade of lower sec edu to the actual age population entering last grade.
@@ -32,7 +33,17 @@ Preprocessing required - NA
 Preprocessing required - NA
 2003-2019
 
-7. regulation - 
+7. sexratio - male to female ratio
+Preprocessing required - NA
+2007-2017...every 5 years before this..can use avg
+
+8. time - number of days reqd to start
+Preprocessing required - NA
+2003-2019
+
+
+
+
 
 
 
