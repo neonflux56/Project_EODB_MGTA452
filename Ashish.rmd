@@ -1,0 +1,50 @@
+---
+title: "Main"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr")
+install.packages(pkgs)
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(keras)
+library(lime)
+library(tidyquant)
+library(rsample)
+library(recipes)
+library(yardstick)
+library(corrr)
+```
+
+
+```{r}
+gdp <- read.csv("data/GDP.csv")
+cost <- read.csv("data/cost.csv")
+nb <- read.csv("data/NB.csv")
+
+cost1 <- cost %>%
+  mutate(Cost = cost$Cost...Men....of.income.per.capita. , Country = cost$Economy , Year = cost$DB.Year) %>%
+  select( Country, Year, Cost ) %>%
+  drop_na() %>%
+  filter(Year != 2020) 
+
+
+gdp1 <- gdp %>%
+  select (Country.Code , Country.Name, X2000:X2018) %>%
+  gather("Year","GDP",3:21) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country.Name)  %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  mutate ( Log_GDP = log(GDP)) %>%
+  select(Country = Country.Name, Code = Country.Code, Year,Log_GDP)
+
+
+ 
+
+
+
+
+
+```
