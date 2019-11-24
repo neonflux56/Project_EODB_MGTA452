@@ -14,8 +14,10 @@ Convert to multicategory, then one hot encoding
 < Low
 2006-2016
 
-****3. cost - Cost to register a business is normalized by presenting it as a percentage of gross national income (GNI) per capita.
+3. cost - Cost to register a business is normalized by presenting it as a percentage of gross national income (GNI) per capita.
 Preprocessing required-
+Convert to multicategory, then one hot encoding
+
 
 
 2006-2019
