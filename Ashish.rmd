@@ -4,10 +4,11 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr")
+pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr","stringr")
 install.packages(pkgs)
 knitr::opts_chunk$set(echo = TRUE)
 
+library(stringr)
 library(ggplot2)
 library(tidyverse)
 library(keras)
@@ -21,6 +22,8 @@ library(corrr)
 
 
 ```{r}
+
+#Fetch Data
 gdp <- read.csv("data/GDP.csv")
 cost <- read.csv("data/cost.csv")
 nb <- read.csv("data/NB.csv")
@@ -30,7 +33,12 @@ procedures <- read.csv("data/procedures.csv")
 sexratio <- read.csv("data/sexratio.csv")
 time <- read.csv("data/time.csv")
 countries <- read.delim("data/countries.txt", header = FALSE, sep = "\n")
+EODB_index <- read.csv("data/EODB-index.csv")
+```
 
+
+```{r}
+# Preprocess Data
 cost1 <- cost %>%
   mutate(Cost = cost$Cost...Men....of.income.per.capita. , Country = cost$Economy , Year = cost$DB.Year) %>%
   select( Country, Year, Cost ) %>%
@@ -105,9 +113,22 @@ time1 <- time %>%
   mutate(Year, Year = str_replace(Year, "X", "")) %>%
   select(Country = Country.Name, Year, time_days)
    
+EODB_index1 <- EODB_index %>%
+  select (Jurisdiction, X2018:X2006) %>%
+  gather("Year","EODB_index",2:14) %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  select(Country = Jurisdiction, Year, EODB_index) %>%
+  mutate(Country, Country = str_trim(Country)) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country) %>%
+  rowwise() %>%
+  mutate(EODB_index, EODB_index = ifelse(EODB_index!= "N/A", parse_number(EODB_index),NA ))
 
-datasetlist <- c(gdp1,procedures1,time1,sexratio1,nb1,LowerS1,percent_UP1)
 
+```
+
+```{r}
+#Merge
 Xian <- cost1
 Xian <- merge(Xian,gdp1,by = c("Country","Year"), all.y = TRUE)
 Xian <- merge(Xian,procedures1,by = c("Country","Year"),all.y = TRUE)
@@ -116,14 +137,19 @@ Xian <- merge(Xian,sexratio1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,nb1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,LowerS1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,percent_UP1,by = c("Country","Year"),all.y = TRUE)
+Xian <- merge(Xian,EODB_index1,by = c("Country","Year"),all.x = TRUE)
 
+
+```
+
+```{r}
 
 #Remove nonsense countries
 Xian <- Xian %>%
   filter(Country %in% countries$V1 )  %>%
   arrange(desc(Year)) %>%
-  arrange(Country)
-
-
+  arrange(Country) %>%
+  mutate(index = seq(1,length(Xian$Year),1)) %>%
+  filter(index <= 2080 )
 
 ```
