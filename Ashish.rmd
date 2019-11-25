@@ -67,7 +67,7 @@ nb1 <- nb %>%
   arrange(Country.Name)  %>%
   mutate(Year, Year = str_replace(Year, "X", "")) %>%
   select(Country = Country.Name, Year,NB) %>%
-  mutate(NB, NB = ifelse(NB>20000, "High",ifelse(NB>1000,"Medium","Low")))
+  mutate(NB, NB = ifelse(NB>20000, "High",ifelse(NB>1000,"Medium","Low"))) 
 
 LowerS1 <- LowerS %>%
   select (Country.Code , Country.Name, X2006:X2018) %>%
@@ -76,6 +76,9 @@ LowerS1 <- LowerS %>%
   arrange(Country.Name)  %>%
   mutate(Year, Year = str_replace(Year, "X", "")) %>%
   select(Country = Country.Name, Year, LowerSecondary)
+
+
+
 
 percent_UP1 <- percent_UP %>%
   select (Country.Code , Country.Name, X2006:X2018) %>%
@@ -151,12 +154,21 @@ Xian <- Xian1 %>%
   mutate(index = seq(1,length(Xian1$Year),1)) %>%
   filter(index <= 2080 ) %>%
   select(index,Country,Code,Year,everything()) 
+
+Xian$Y <- as.numeric(cut(Xian$EODB_index, 10))
+
+train_Xian <- Xian %>%
+
+  
+
 ```
 
 
 
 ```{r}
 
+rec_obj <- recipe(EODB_index ~ ., data = Xian) %>%
+  step_discretize(EODB_index, options = list(cuts = 10))
 
 
 ```
