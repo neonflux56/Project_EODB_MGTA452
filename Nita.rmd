@@ -5,9 +5,69 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr")
+install.packages(pkgs)
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(keras)
+library(lime)
+library(tidyquant)
+library(rsample)
+library(recipes)
+library(yardstick)
+library(corrr)
 ```
 
 ```{r}
+LowerS <- read.csv("data/LowerS.csv")
+percent_UP <- read.csv("data/percent_urban_population.csv")
+procedures <- read.csv("data/procedures.csv")
+sexratio <- read.csv("data/sexratio.csv")
+time <- read.csv("data/time.csv")
+
+
+LowerS1 <- LowerS %>%
+  select (Country.Code , Country.Name, X2006:X2018) %>%
+  gather("Year","LowerSecondary",3:15) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country.Name)  %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  select(Country = Country.Name, Code = Country.Code, Year, LowerSecondary)
+
+percent_UP1 <- percent_UP %>%
+  select (Country.Code , Country.Name, X2006:X2018) %>%
+  gather("Year","Percent_Urban_Population",3:15) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country.Name)  %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  select(Country = Country.Name, Code = Country.Code, Year, Percent_Urban_Population)
+
+procedures1 <- procedures %>%
+  select (Country.Code , Country.Name, X2006:X2018) %>%
+  gather("Year","procedures",3:15) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country.Name)  %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  select(Country = Country.Name, Code = Country.Code, Year, procedures)
+  
+sexratio1 <- sexratio %>%
+  select (Country.Code , Country.Name, X2006:X2018) %>%
+  gather("Year","sexratio",3:15) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country.Name)  %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  select(Country = Country.Name, Code = Country.Code, Year, sexratio)
+
+time1 <- time %>%
+  select (Country.Code , Country.Name, X2006:X2018) %>%
+  gather("Year","time_days",3:15) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country.Name)  %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  select(Country = Country.Name, Code = Country.Code, Year, time_days)
+  
+
 
 
 
