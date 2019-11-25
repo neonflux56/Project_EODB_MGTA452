@@ -76,3 +76,12 @@ EODB_index1 <- EODB_index %>%
   filter((Year == 2018))
 
 ```
+
+```{r}
+for (i in 1:length(Xian1$Cost)) {
+  if (is.na(Xian1$Cost[i]) == TRUE) {
+    if (Xian1$Country[i] == Xian1$Country[i-1]){
+    Xian1$Cost[i] = Xian1$Cost[i-1]}
+  }
+}
+```
