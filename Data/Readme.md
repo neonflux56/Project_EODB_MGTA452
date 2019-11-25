@@ -17,8 +17,7 @@ Convert to multicategory, then one hot encoding
 3. cost - Cost to register a business is normalized by presenting it as a percentage of gross national income (GNI) per capita.
 Preprocessing required-
 Convert to multicategory, then one hot encoding
-
-
+source: https://www.doingbusiness.org/en/custom-query
 
 2006-2019
 
@@ -42,6 +41,14 @@ Preprocessing required - NA
 8. time - number of days reqd to start
 Preprocessing required - NA
 2003-2019
+
+9. Ease of Doing Business Index
+Ease of doing business ranks economies from 1 to 190, with first place being the best. A high ranking (a low numerical rank) means that the regulatory environment is conducive to business operation. The index averages the country's percentile rankings on 10 topics covered in the World Bank's Doing Business. The ranking on each topic is the simple average of the percentile rankings on its component indicators.
+Source: https://en.wikipedia.org/wiki/Ease_of_doing_business_index
+
+10. List of countries
+Source: http://www.countries-list.info/Download-List
+
 
 
 

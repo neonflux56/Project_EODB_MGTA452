@@ -72,6 +72,7 @@ EODB_index1 <- EODB_index %>%
   select (Jurisdiction, X2018:X2006) %>%
   gather("Year","EODB_index",2:14) %>%
   mutate(Year, Year = str_replace(Year, "X", "")) %>%
-  select(Country = Jurisdiction, Year, EODB_index)
+  select(Country = Jurisdiction, Year, EODB_index) %>%
+  filter((Year == 2018))
 
 ```
