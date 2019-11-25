@@ -147,15 +147,18 @@ Xian1 <- Xian %>%
   arrange(desc(Year)) %>%
   arrange(Country) 
 
-Xian1 <- Xian1 %>%
+Xian <- Xian1 %>%
   mutate(index = seq(1,length(Xian1$Year),1)) %>%
   filter(index <= 2080 ) %>%
   select(index,Country,Code,Year,everything()) 
-
 ```
 
 
 
+```{r}
 
+
+
+```
 
 
