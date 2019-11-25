@@ -7,7 +7,6 @@ output: pdf_document
 pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr","stringr")
 install.packages(pkgs)
 knitr::opts_chunk$set(echo = TRUE)
-
 library(stringr)
 library(ggplot2)
 library(tidyverse)
@@ -139,17 +138,24 @@ Xian <- merge(Xian,LowerS1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,percent_UP1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,EODB_index1,by = c("Country","Year"),all.x = TRUE)
 
-
 ```
 
 ```{r}
-
 #Remove nonsense countries
-Xian <- Xian %>%
+Xian1 <- Xian %>%
   filter(Country %in% countries$V1 )  %>%
   arrange(desc(Year)) %>%
-  arrange(Country) %>%
-  mutate(index = seq(1,length(Xian$Year),1)) %>%
-  filter(index <= 2080 )
+  arrange(Country) 
+
+Xian1 <- Xian1 %>%
+  mutate(index = seq(1,length(Xian1$Year),1)) %>%
+  filter(index <= 2080 ) %>%
+  select(index,Country,Code,Year,everything()) 
 
 ```
+
+
+
+
+
+
