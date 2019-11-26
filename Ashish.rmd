@@ -141,6 +141,8 @@ Xian <- merge(Xian,EODB_index1,by = c("Country","Year"),all.x = TRUE)
 
 ```
 
+
+
 ```{r}
 #REPLACE NA VALUES AND REMOVE OTHER JUNK
 
@@ -155,15 +157,23 @@ Xian <- Xian1 %>%
   select(index,Country,Code,Year,everything()) 
 
 
-# Cost
+### Cost
+natest <- Xian %>%
+  group_by(Country) %>%
+  summarise(count = sum(is.na(Cost)), bestval = "") %>%
+  mutate(Method = ifelse(count>0 , ifelse(count==13,"All","Few") , "NAN"))
+#for few costs missing
 for (i in 1:length(Xian$Cost)) {
   if (is.na(Xian$Cost[i]) == TRUE) {
     if (Xian$Country[i] == Xian$Country[i-1]){
     Xian$Cost[i] = Xian$Cost[i-1]}
   }
 }
+#For all costs missing
+Xian <- Xian %>%
+  mutate(Country, Cost = ifelse(Country == "Liechtenstein","Medium High",Cost ))
 
-#GDP
+### GDP
 natest <- Xian %>%
   group_by(Country) %>%
   summarise(count = sum(is.na(Log_GDP)), bestval = max(Log_GDP, na.rm = TRUE))
@@ -175,7 +185,7 @@ Xian <- Xian %>%
 
 
 
-#Procedures
+### Procedures
 natest <- Xian %>%
   group_by(Country) %>%
   summarise(count = sum(is.na(procedures)), bestval = max(procedures, na.rm = TRUE)) %>%
@@ -188,7 +198,7 @@ Xian <- Xian %>%
 
 
 
-#Time_days
+### Time_days
 natest <- Xian %>%
   group_by(Country) %>%
   summarise(count = sum(is.na(time_days)), bestval = mean(time_days, na.rm = TRUE)) %>%
@@ -200,7 +210,7 @@ Xian <- Xian %>%
   mutate( time_days, time_days = ifelse( Method=="Few" , natest$bestval[which(natest$Country==Country)], ifelse(Method == "All" , time_days, time_days) ) ) 
 
 
-#sexratio
+### sexratio
 natest <- Xian %>%
   group_by(Country) %>%
   summarise(count = sum(is.na(sexratio)), bestval = mean(Xian$sexratio, na.rm = TRUE)) %>%
@@ -212,7 +222,7 @@ Xian <- Xian %>%
   mutate( sexratio, sexratio = ifelse( Method=="Few" , natest$bestval[which(natest$Country==Country)], ifelse(Method == "All" , natest$bestval[which(natest$Country==Country)], sexratio) ) ) 
 
 
-#NB and convert to category
+### NB and convert to category
 natest <- Xian %>%
   group_by(Country) %>%
   summarise(count = sum(is.na(NB)), bestval = mean(NB,na.rm = TRUE)) %>%
@@ -225,7 +235,7 @@ Xian <- Xian %>%
   mutate(NB, NB = ifelse(NB>20000, "High",ifelse(NB>1000,"Medium","Low"))) 
 
 
-#Lower Secondary
+### Lower Secondary
 natest <- Xian %>%
   group_by(Country) %>%
   summarise(count = sum(is.na(LowerSecondary)), bestval = max(LowerSecondary,na.rm = TRUE)) %>%
@@ -237,7 +247,19 @@ Xian <- Xian %>%
   mutate( LowerSecondary, LowerSecondary = ifelse( Method=="Few" , natest$bestval[which(natest$Country==Country)], ifelse(Method == "All" , mean(Xian$LowerSecondary,na.rm = TRUE), LowerSecondary) ) ) 
 
 
-#EODB_Index
+### Percent Urban Population
+natest <- Xian %>%
+  group_by(Country) %>%
+  summarise(count = sum(is.na(Percent_Urban_Population)), bestval = max(Percent_Urban_Population,na.rm = TRUE)) %>%
+  mutate(Method = ifelse(count>0 , ifelse(count==13,"All","Few") , "NAN"))
+Xian <- Xian %>%
+  mutate(HasNA = ifelse(is.na(Percent_Urban_Population) == TRUE,"Yes","No")) %>%
+  rowwise() %>%
+  mutate(Method = ifelse(HasNA == "Yes", ifelse(natest$count[which(natest$Country==Country)]<13, "Few" , "All"), "NAN")) %>%
+  mutate( Percent_Urban_Population, Percent_Urban_Population = ifelse( Method=="Few" , natest$bestval[which(natest$Country==Country)], ifelse(Method == "All" , mean(Xian$Percent_Urban_Population,na.rm = TRUE), Percent_Urban_Population) ) ) 
+
+
+### EODB_Index
 natest <- Xian %>%
   group_by(Country) %>%
   summarise(count = sum(is.na(EODB_index)), bestval = max(EODB_index,na.rm = TRUE)) %>%
@@ -248,18 +270,61 @@ Xian <- Xian %>%
   mutate(Method = ifelse(HasNA == "Yes", ifelse(natest$count[which(natest$Country==Country)]<13, "Few" , "All"), "NAN")) %>%
   mutate( EODB_index, EODB_index = ifelse( Method=="Few" , natest$bestval[which(natest$Country==Country)], ifelse(Method == "All" , mean(Xian$EODB_index,na.rm = TRUE), EODB_index) ) )
 
-#Generate outcome variables
-Xian$Y <- as.numeric(cut(Xian$EODB_index, 10))
-Xian1 <- Xian  %>%
-  select(-HasNA,-Method,-Code) 
+### Generate outcome variables
+Xian$Y <- as.numeric(cut(Xian$EODB_index, 2))
+Xian <- Xian  %>%
+  select(-HasNA,-Method) 
 
-str(Xian1)
+str(Xian)
+
+
 ```
 
 ```{r}
 #Test and train data
+train_data <- Xian %>%
+  filter(Year != "2018") %>%
+  mutate(Country, Country = as.character(Country)) %>%
+  select(-index,-Code,-Year,-EODB_index)
+
+str(train_data)
 
 
+test_data <- Xian %>%
+  filter(Year == "2018") %>%
+  mutate(Country, Country = as.character(Country)) %>%
+  select(-index,-Code,-Year,-EODB_index)
+
+
+str(test_data)
+
+```
+
+```{r}
+#Recipe for baking
+rec_obj <- recipe(Y ~ ., data = train_data) %>%
+  step_dummy(Country, one_hot = TRUE) %>%
+  step_dummy(Cost, one_hot = TRUE) %>%
+  step_dummy(NB, one_hot = TRUE) %>%
+  step_center(all_predictors(), -all_outcomes()) %>%
+  step_scale(all_predictors(), -all_outcomes()) %>%
+  prep(data = train_data)
+  
+rec_obj
+
+
+
+#Bake both sets for predictors
+Xtrain <- bake(rec_obj, new_data = train_data) %>% select(-Y) 
+Xtest  <- bake(rec_obj, new_data = test_data) %>% select(-Y) 
+
+#str(Xtrain)
+#glimpse(Xtrain)
+# Response variables both sets
+Ytrain <- to_categorical(train_data$Y)
+Ytest  <- to_categorical(test_data$Y)
+
+#Note Length of target labels is 11 after OHE due to having novalue also as a column 
 
 ```
 
@@ -267,12 +332,105 @@ str(Xian1)
 
 ```{r}
 
+# Building our Artificial Neural Network
+model <- keras_model_sequential()
 
-#Recipe for baking
-rec_obj <- recipe(EODB_index ~ ., data = Xian) %>%
-  step_discretize(EODB_index, options = list(cuts = 10))
+model %>% 
+  # First hidden layer
+  layer_dense(units= 50, activation= "relu", kernel_initializer = "uniform",input_shape = ncol(Xtrain)) %>% 
+  # Output layer
+  layer_dense(units= 3, kernel_initializer = "uniform",activation = "softmax") 
+  
+
+
+# Print a summary of a model
+summary(model)
+
+# Get model configuration
+get_config(model)
+
+# Get layer configuration
+get_layer(model, index = 1)
+
+# List the model's layers
+model$layers
+
+# List the input tensors
+model$inputs
+
+# List the output tensors
+model$outputs
+
+
+# Compile ANN
+model %>%  compile(optimizer = 'adam', loss  = 'categorical_crossentropy', metrics   = 'accuracy' )
+
 
 
 ```
+
+
+
+
+
+
+```{r}
+
+# Store the fitting history in `history` 
+history <- model %>% fit(
+     as.matrix(Xtrain), 
+     as.matrix(Ytrain), 
+     epochs = 60,
+     batch_size = 32 , 
+     validation_split = 0.2
+ )
+
+# Plot the history
+plot(history)
+
+
+
+```
+
+
+
+
+```{r}
+
+# Predict the classes for the test data
+pred <- model %>% predict_classes(as.matrix(Xtest))
+
+# Confusion matrix
+table(actual=test_data$Y, pred)
+
+```
+
+
+
+
+
+
+```{r}
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
