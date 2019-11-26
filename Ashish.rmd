@@ -288,13 +288,10 @@ train_data <- Xian %>%
   select(-index,-Code,-Year,-EODB_index)
 
 str(train_data)
-
-
 test_data <- Xian %>%
   filter(Year == "2018") %>%
   mutate(Country, Country = as.character(Country)) %>%
   select(-index,-Code,-Year,-EODB_index)
-
 
 str(test_data)
 
@@ -337,7 +334,7 @@ model <- keras_model_sequential()
 
 model %>% 
   # First hidden layer
-  layer_dense(units= 50, activation= "relu", kernel_initializer = "uniform",input_shape = ncol(Xtrain)) %>% 
+  layer_dense(units= 80, activation= "relu", kernel_initializer = "uniform",input_shape = ncol(Xtrain)) %>% 
   # Output layer
   layer_dense(units= 3, kernel_initializer = "uniform",activation = "softmax") 
   
@@ -363,7 +360,7 @@ model$outputs
 
 
 # Compile ANN
-model %>%  compile(optimizer = 'adam', loss  = 'categorical_crossentropy', metrics   = 'accuracy' )
+model %>%  compile(optimizer = 'adam', loss  = 'binary_crossentropy', metrics   = 'accuracy' )
 
 
 
@@ -380,7 +377,7 @@ model %>%  compile(optimizer = 'adam', loss  = 'categorical_crossentropy', metri
 history <- model %>% fit(
      as.matrix(Xtrain), 
      as.matrix(Ytrain), 
-     epochs = 60,
+     epochs = 20,
      batch_size = 32 , 
      validation_split = 0.2
  )
@@ -403,9 +400,20 @@ pred <- model %>% predict_classes(as.matrix(Xtest))
 # Confusion matrix
 table(actual=test_data$Y, pred)
 
+
+#Predict probabilities
+YProb  <- predict_proba(object = model, x = as.matrix(Xtest)) %>% as.vector()
+
+YClassProb <- predict_classes(object = model, x = as.matrix(Xtest)) %>% as.vector()
+
+estimates_keras_tbl <- tibble(
+  truth      = as.factor(Ytest) %>% fct_recode(yes = "1", no = "0"),
+  estimate   = as.factor(pred) %>% fct_recode(yes = "1", no = "0"),
+  class_prob = YClassProb
+)
+
+estimates_keras_tbl
 ```
-
-
 
 
 
