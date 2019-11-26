@@ -8,6 +8,10 @@ Ease of doing business in a country.
 
 MODEL
 
+-- 1 layer and 11 outputs 
+-- cross classification
+-- adam
+
 
 
 
@@ -34,4 +38,31 @@ Country Specific Page
 
 
 ###############################################
+
+ISSUES FACED
+
+-- removing NA varibles before running model
+-- number of outputs in last layer should match one hot of Y
+-- model %>% fit (as.matrix(X), Y) **** convert X data to matrix before running on model, else input to model is NULL
+-- Number of Y output ???? bad accuracy
+
+
+TO DO
+
+-- Improve Model
+-- Add more features if possible
+-- Probability using proba or lime
+-- Shiny
+
+
+
+
+###############################################
+
+
+
+
+
+
+
 
