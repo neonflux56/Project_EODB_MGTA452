@@ -47,7 +47,12 @@ ISSUES FACED
 -- Number of Y output ???? bad accuracy
 
 
+TO DO
 
+-- Improve Model
+-- Add more features if possible
+-- Probability using proba or lime
+-- Shiny
 
 
 
