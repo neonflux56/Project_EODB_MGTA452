@@ -11,21 +11,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### Shiny Visualization
 ```{r}
+
+install.packages("shinydashboard")
 library(shiny)
 library(shinydashboard)
 ## load data 
-countries <- read.delim("Data/countries.txt")
+#countries <- read.delim("Data/countries.txt")
 
 ```
 
 ```{r}
 header <- dashboardHeader(
-  title = "Genius Ashish",
+  title = "Ellennnnnnnn",
   titleWidth = 250
 )
 
-sidebar <- dashboardSidebar(
-  sidebarMenuOutput('menu'))
+sidebar <- dashboardSidebar(sidebarMenuOutput('menu'))
 
 body <- dashboardBody(
   tabItems(
@@ -50,44 +51,28 @@ body <- dashboardBody(
     ## second tab content
     tabItem(tabName="countryselect",
             fluidRow(
-              box(
-                title = "Easiness Rank",width=4),
-              box(
-                title = "Urban Population",
-                plotOutput("plot1",height = 250,width=4),width=4
-                 ),
-              box(
-                title = "Whatever Ashish Want",width=4
-                ),
-              box(
-                title = "Index Table",
-                plotOutput("plot2",height=600),width=6
-                 )
-                 )
+              box(title = "Select Country" , width =4 , selectInput("select",label = ("Select a Country"),choices = Xian$Country),
+              box(title = "Easiness Rank",width=4),
+              box(title = "Urban Population",plotOutput("plot1",height = 250,width=3),width=4),
+              box(title = "Whatever Ashish Want",width=6),
+              box(title = "Index Table",plotOutput("plot2",height=600),width=6))
     
-  )))
+  ))))
+
+```
 
 
-   
-
-
+```{r}
 ui <- dashboardPage(header,sidebar,body)
 server <- function(input, output){
   output$menu<-renderMenu({
-    sidebarMenu(
-    menuItem(
-      text='Homepage',
-      tabName = 'hp'),
-    menuItem(
-      tabName = "countryselect",
-      selectInput(
-        "select",
-        label = ("Select a Country"),
-        choices = Xian$Country)
-      )
- )
+    sidebarMenu(menuItem(text='Homepage',tabName = 'hp'),menuItem(text= "Country Measure",tabName = "countryselect"))
   })  
 }
+
 shinyApp(ui,server) 
+
+
+
 ```
 
