@@ -7,3 +7,63 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### before pushing always pulling
+
+#### Shiny Visualization
+```{r}
+library(shiny)
+library(shinydashboard)
+## load data 
+countries <- read.delim("Data/countries.txt")
+
+```
+
+```{r}
+header <- dashboardHeader(
+  title = "Genius Ashish",
+  titleWidth = 250
+)
+
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    menuItem(
+      text='Homepage',
+      tabName = 'homepage'),
+    menuItem(
+      text = 'Country Detail',
+      tabName = 'countryspecifics'),
+    menuItem(
+      selectInput(
+        "select",
+        label = h3("Select a Country"),
+        choices = Xian$Country
+        
+      )
+    )
+    
+    )
+)
+  
+
+
+body <- dashboardBody(
+  tabItems(
+    tabItem(
+      tabNmae="rank",
+      tabBox(
+        title="Easiness Rank"),
+      ),
+    tabItem(
+      tabName="Urban Population"
+      
+    )
+    )
+  )
+
+
+ui <- dashboardPage(header,sidebar,body)
+server <- function(input, output){}
+shinyApp(ui,server)
+
+```
+
