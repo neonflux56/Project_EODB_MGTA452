@@ -30,8 +30,23 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     # homepage tab content
-    tabItem(tabName="hp"),
-    
+    tabItem(tabName="hp",
+            fluidRow(
+              box(
+                title= "Project Inrtoduction"),
+              box(
+                title = "Other Information"),
+              box(
+                title = "Correltaion",
+                plotOutput("plot3",height = 250)),
+              box(
+                title = "Heat Map",
+                plotOutput("plot4",height=250)),
+              box(
+                title="Graph",
+                plotOutput("plot5",height = 250))
+              )
+              ),
     ## second tab content
     tabItem(tabName="countryselect",
             fluidRow(
@@ -47,14 +62,6 @@ body <- dashboardBody(
               box(
                 title = "Index Table",
                 plotOutput("plot2",height=600)
-                 ),
-             box(
-                title ="Ranking Trend",
-                plotOutput("plot3",height =300)
-                 ),
-              box(
-                title = "Correlation",
-                plotOutput("plot4",height = 300)
                  )
                  )
     
