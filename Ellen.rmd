@@ -25,44 +25,62 @@ header <- dashboardHeader(
 )
 
 sidebar <- dashboardSidebar(
-  sidebarMenu(
-    menuItem(
-      text='Homepage',
-      tabName = 'homepage'),
-    menuItem(
-      text = 'Country Detail',
-      tabName = 'countryspecifics'),
-    menuItem(
-      selectInput(
-        "select",
-        label = h3("Select a Country"),
-        choices = Xian$Country
-        
-      )
-    )
-    
-    )
-)
-  
-
+  sidebarMenuOutput('menu'))
 
 body <- dashboardBody(
   tabItems(
-    tabItem(
-      tabNmae="rank",
-      tabBox(
-        title="Easiness Rank"),
-      ),
-    tabItem(
-      tabName="Urban Population"
-      
-    )
-    )
-  )
+    # homepage tab content
+    tabItem(tabName="hp"),
+    
+    ## second tab content
+    tabItem(tabName="countryselect",
+            fluidRow(
+              box(
+                title = "Easiness Rank"),
+              box(
+                title = "Urban Population",
+                plotOutput("plot1",height = 250)
+                 ),
+              box(
+                title = "Whatever Ashish Want"
+                ),
+              box(
+                title = "Index Table",
+                plotOutput("plot2",height=600)
+                 ),
+             box(
+                title ="Ranking Trend",
+                plotOutput("plot3",height =300)
+                 ),
+              box(
+                title = "Correlation",
+                plotOutput("plot4",height = 300)
+                 )
+                 )
+    
+  )))
+
+
+   
 
 
 ui <- dashboardPage(header,sidebar,body)
-server <- function(input, output){}
+server <- function(input, output){
+  output$menu<-renderMenu({
+    sidebarMenu(
+    menuItem(
+      text='Homepage',
+      tabName = 'hp'),
+    menuItem(
+      tabName = "countryselect",
+      selectInput(
+        "select",
+        label = ("Select a Country"),
+        choices = Xian$Country)
+      )
+ )
+  })
+}
 shinyApp(ui,server)
 
 ```
