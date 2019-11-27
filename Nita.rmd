@@ -131,3 +131,33 @@ xian3 <- Xian1 %>%
 Xian1 <- Xian1 %>%
   drop_na(EODB_index)
 ```
+
+```{r}
+class(model)
+model_type.keras.models.Sequential <- function(x, ...) {
+  "classification"
+}
+model.keras.models.Sequential <- function(x, newdata, type, ...) {
+  pred <- pred_proba(object = x, x = as.matrix(newdata))
+  data.frame(Yes = pred, No = 1 - pred)
+}
+predict_model(x = model, newdata = Xtest, type = 'raw') %>%
+  tibble::as_tibble()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
