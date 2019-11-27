@@ -23,16 +23,16 @@ library(corrr)
 ```{r}
 
 #Fetch Data
-gdp <- read.csv("data/GDP.csv")
-cost <- read.csv("data/cost.csv")
-nb <- read.csv("data/NB.csv")
-LowerS <- read.csv("data/LowerS.csv")
-percent_UP <- read.csv("data/percent_urban_population.csv")
-procedures <- read.csv("data/procedures.csv")
-sexratio <- read.csv("data/sexratio.csv")
-time <- read.csv("data/time.csv")
-countries <- read.delim("data/countries.txt", header = FALSE, sep = "\n")
-EODB_index <- read.csv("data/EODB-index.csv")
+gdp <- read.csv("Data/GDP.csv")
+cost <- read.csv("Data/cost.csv")
+nb <- read.csv("Data/NB.csv")
+LowerS <- read.csv("Data/LowerS.csv")
+percent_UP <- read.csv("Data/percent_urban_population.csv")
+procedures <- read.csv("Data/procedures.csv")
+sexratio <- read.csv("Data/sexratio.csv")
+time <- read.csv("Data/time.csv")
+countries <- read.delim("Data/countries.txt", header = FALSE, sep = "\n")
+EODB_index <- read.csv("Data/EODB-index.csv")
 ```
 
 
