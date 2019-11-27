@@ -86,8 +86,8 @@ server <- function(input, output){
         choices = Xian$Country)
       )
  )
-  })
+  })  
 }
-shinyApp(ui,server)
+shinyApp(ui,server) 
 ```
 
