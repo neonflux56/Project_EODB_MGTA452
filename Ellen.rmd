@@ -33,35 +33,35 @@ body <- dashboardBody(
     tabItem(tabName="hp",
             fluidRow(
               box(
-                title= "Project Inrtoduction"),
+                title= "Project Inrtoduction",width=6),
               box(
-                title = "Other Information"),
+                title = "Other Information",width=6),
               box(
                 title = "Correltaion",
-                plotOutput("plot3",height = 250)),
+                plotOutput("plot3",height = 250,width=4),width=4),
               box(
                 title = "Heat Map",
-                plotOutput("plot4",height=250)),
+                plotOutput("plot4",height=250,width=4),width=4),
               box(
                 title="Graph",
-                plotOutput("plot5",height = 250))
+                plotOutput("plot5",height = 250,width=4),width=4)
               )
               ),
     ## second tab content
     tabItem(tabName="countryselect",
             fluidRow(
               box(
-                title = "Easiness Rank"),
+                title = "Easiness Rank",width=4),
               box(
                 title = "Urban Population",
-                plotOutput("plot1",height = 250)
+                plotOutput("plot1",height = 250,width=4),width=4
                  ),
               box(
-                title = "Whatever Ashish Want"
+                title = "Whatever Ashish Want",width=4
                 ),
               box(
                 title = "Index Table",
-                plotOutput("plot2",height=600)
+                plotOutput("plot2",height=600),width=6
                  )
                  )
     
