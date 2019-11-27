@@ -402,7 +402,33 @@ table(actual=test_data$Y, pred)
 
 
 #Predict probabilities
-YProb  <- predict_proba(object = model, x = as.matrix(Xtest)) %>% as.vector()
+YProb  <- predict_proba(object = model, x = as.matrix(Xtest))
+
+colnames(YProb) <- c("none","easy","noteasy")
+
+YProb <- as.data.frame(YProb)
+YProb <- YProb %>%
+  rowwise() %>%
+  mutate(asdad =  max(none,easy,noteasy)) 
+
+YProb$Predicted = as.vector(pred)
+YProb$Country = test_data$Country
+
+
+Top_1_cat <- YProb %>%
+  filter(Predicted == 1) %>%
+  arrange(desc(asdad)) %>%
+ select(Country)
+
+Top_2_cat <- YProb %>%
+  filter(Predicted == 2) %>%
+  arrange(asdad) %>%
+ select(Country)
+
+test <- as.data.frame(bind_rows(Top_1_cat, Top_2_cat))
+
+test <- test %>%
+  mutate(Rank = seq(1,length(test$Country),1))
 
 YClassProb <- predict_classes(object = model, x = as.matrix(Xtest)) %>% as.vector()
 
