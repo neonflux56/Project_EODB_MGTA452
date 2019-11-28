@@ -1,5 +1,7 @@
 ---
-title: "Ellen"
+title: "Shiny"
+resource_files:
+- Main.rmd
 output: pdf_document
 ---
 
@@ -11,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 #### Shiny Visualization
 ```{r}
 
+
+install.packages('rsconnect')
 install.packages("shinydashboard")
 install.packages("shinythemes")
 library(shinythemes)
@@ -192,3 +196,18 @@ shinyApp(ui,server)
 
 ```
 
+
+DEPLOY APP
+
+
+```{r}
+
+library(rsconnect)
+rsconnect::setAccountInfo(name='neonflux56',
+			  token='D55E3671B8842273FAA12FD48364FC26',
+			  secret='lCgh0c7L9NLvY6nOYd22HOPd9ttr7Oyd0zou5jzI')
+
+rsconnect::deployApp()
+
+
+```

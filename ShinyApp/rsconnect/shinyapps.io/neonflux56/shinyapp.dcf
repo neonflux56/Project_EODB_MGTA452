@@ -1,0 +1,12 @@
+name: shinyapp
+title:
+username:
+account: neonflux56
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1535655
+bundleId: 2623587
+url: https://neonflux56.shinyapps.io/shinyapp/
+when: 1574918899.5388
+asMultiple: FALSE
+asStatic: FALSE
