@@ -4,9 +4,10 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr","stringr")
+pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr","stringr","rworldmap")
 install.packages(pkgs)
 knitr::opts_chunk$set(echo = TRUE)
+library(rworldmap)
 library(stringr)
 library(ggplot2)
 library(tidyverse)
@@ -17,6 +18,8 @@ library(rsample)
 library(recipes)
 library(yardstick)
 library(corrr)
+library(ggforce)
+library(scales)
 ```
 
 
@@ -335,6 +338,7 @@ model <- keras_model_sequential()
 model %>% 
   # First hidden layer
   layer_dense(units= 80, activation= "relu", kernel_initializer = "uniform",input_shape = ncol(Xtrain)) %>% 
+  #layer_dense(units= 16, activation= "relu", kernel_initializer = "uniform") %>% 
   # Output layer
   layer_dense(units= 3, kernel_initializer = "uniform",activation = "softmax") 
   
@@ -425,10 +429,10 @@ Top_2_cat <- YProb %>%
   arrange(asdad) %>%
  select(Country)
 
-test <- as.data.frame(bind_rows(Top_1_cat, Top_2_cat))
+OutputRank <- as.data.frame(bind_rows(Top_1_cat, Top_2_cat))
 
-test <- test %>%
-  mutate(Rank = seq(1,length(test$Country),1))
+OutputRank <- OutputRank %>%
+  mutate(Rank = seq(1,length(OutputRank$Country),1))
 
 #YClassProb <- predict_classes(object = model, x = as.matrix(Xtest)) %>% as.vector()
 
@@ -442,10 +446,15 @@ test <- test %>%
 ```
 
 
-```{r}
-Y2 <- as.data.frame(Ytrain) %>%
-  mutate(easy = ifelse(as.data.frame(Ytrain)$V2 == 1, 1, 0))
-```
+
+
+
+VISUALIZATION
+
+
+1. Correlation
+
+
 
 ```{r}
 Y2 <- as.data.frame(Ytrain) %>%
@@ -466,13 +475,13 @@ corrr_analysis2 <- corrr_analysis %>%
 corrr_analysis2 %>%
   ggplot(aes(x = EODB_Measure, y = fct_reorder(feature, desc(EODB_Measure)))) +
   geom_point() +
-  # Positive Correlations - Contribute to churn
+  # Positive Correlations - Contribute 
   geom_segment(aes(xend = 0, yend = feature), 
                color = palette_light()[[2]], 
                data = corrr_analysis2 %>% filter(EODB_Measure > 0)) +
   geom_point(color = palette_light()[[2]], 
              data = corrr_analysis2 %>% filter(EODB_Measure > 0)) +
-  # Negative Correlations - Prevent churn
+  # Negative Correlations - Prevent 
   geom_segment(aes(xend = 0, yend = feature), 
                color = palette_light()[[1]], 
                data = corrr_analysis2 %>% filter(EODB_Measure < 0)) +
@@ -484,10 +493,97 @@ corrr_analysis2 %>%
   geom_vline(xintercept = 0.25, color = palette_light()[[5]], size = 1, linetype = 2) +
   # Aesthetics
   theme_tq() +
-  labs(title = "EODB_Measure Correlation Analysis",
-       subtitle = paste("Positive Correlations (contribute to EODB_Measure),",
-                        "Negative Correlations (prevent churn)"),y = "Feature Importance")
+  labs(title = "Feature correlation in training data",y = "Feature",x = "Correlation Measure")
 ```
+
+
+
+2. Heat Map
+
+
+```{r}
+
+##Homepage Heat World Map
+
+ExtractCode <- Xian %>%
+  group_by(Country,Code) %>%
+  summarise(size = n()) %>%
+  select(-size)
+OutputRank <- OutputRank %>%
+  rowwise() %>%
+  mutate(Country, Code = ExtractCode$Code[which(ExtractCode$Country==Country)])
+mapped_data <- joinCountryData2Map(OutputRank, joinCode = "ISO3", nameJoinColumn = "Code") 
+mapCountryData(mapped_data, nameColumnToPlot = "Rank", colourPalette=c('#1E6C03', '#E5FEDC'), addLegend='TRUE', borderCol = "grey", mapTitle = "Rank - Ease Of Doing Business")
+
+```
+
+
+3. 
+
+
+##Homepage trending line for 8 countries
+```{r}
+
+
+plot_countries = c('New Zealand', 'Finland', 'Norway', 'Canada', 'Eritrea', 'Central African Republic', 'Iraq', 'Chad')
+bottom_countries = c('Eritrea', 'Equatorial Guinea', 'Central African Republic', 'Iraq', 'Chad')
+index1 <- Xian %>%
+  filter(Country %in% plot_countries) %>%
+  select(Country, Year, EODB_index)
+trending_line <- ggplot(data=index1, aes(x=Year, y=EODB_index, color = Country, group = Country)) +geom_line() + geom_point() + labs(x="Year", y = "rank of ease of doing business")
+
+```
+
+
+
+
+
+4. Urban Pop
+
+
+```{r}
+
+#Individual page for urban population percentage
+UP <- Xian %>%
+  group_by(Country) %>%
+  summarise(Urban_Portion = mean(Percent_Urban_Population)) %>%
+  mutate(Rural_Portion = 100 - Urban_Portion)
+
+UP1 <- UP %>%
+  gather("Urban_Portion","Rural_Portion",2:3)  %>%
+  arrange(Country) %>%
+  filter(Country == "Afghanistan")
+colnames(UP1) <- c("Country","Class","Perc")
+
+ggplot(UP1, aes(x = 2, y = Perc, fill = Class)) +
+  geom_bar(stat = "identity", color = "white") +
+  coord_polar(theta = "y", start = -pi/2)+
+  #geom_text(aes(y = round(Perc), label = round(Perc))) +
+  theme_void()+xlim(0.5, 2.5)
+
+
+```
+
+
+5. GDP
+
+```{r}
+
+
+##Individual page for GDP Trending line
+gdpline <- Xian %>%
+  select (Country, Year, Log_GDP) %>%
+  mutate (GDP = exp(Log_GDP)) %>%
+  filter(Country == 'Afghanistan')
+gdp_plot <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
+
+
+gdp_plot
+```
+
+
+
+
 
 
 
