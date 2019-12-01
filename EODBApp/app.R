@@ -1,21 +1,47 @@
+---
+    title: "Final_EODB"
+output: pdf_document
+---
+    
 
-#pkgs <- c("reticulate","keras", "lime", "tidyquant", "rsample", "recipes", "corrr","stringr","rworldmap")
+
+
+#pkgs <- c("keras", "lime", "tidyquant", "rsample", "recipes", "yardstick", "corrr","stringr","rworldmap")
 #install.packages(pkgs)
-
-library(rworldmap)
-library(stringr)
-library(ggplot2)
-library(tidyverse)
-library(keras)
-library(lime)
-library(tidyquant)
-library(rsample)
-library(recipes)
-library(corrr)
-library(ggforce)
-library(scales)
+#install.packages("leaflet")
+#install.packages("tableHTML")
+#install.packages('rsconnect')
+#install.packages("shinydashboard")
+#install.packages("shinythemes")
+require(devtools)
+#install_github("nik01010/dashboardthemes")
 
 
+
+require(tableHTML)
+require(shinythemes)
+require(shiny)
+require(shinydashboard)
+require(devtools)
+#require(dashboardthemes)
+require(leaflet)
+require(rworldmap)
+require(stringr)
+require(ggplot2)
+require(tidyverse)
+require(keras)
+require(lime)
+require(tidyquant)
+require(rsample)
+require(recipes)
+require(yardstick)
+require(corrr)
+require(ggforce)
+require(scales)
+
+
+
+#Fetch Data
 gdp <- read.csv("Data/GDP.csv")
 cost <- read.csv("Data/cost.csv")
 nb <- read.csv("Data/NB.csv")
@@ -26,7 +52,7 @@ sexratio <- read.csv("Data/sexratio.csv")
 time <- read.csv("Data/time.csv")
 countries <- read.delim("Data/countries.txt", header = FALSE, sep = "\n")
 EODB_index <- read.csv("Data/EODB-index.csv")
-
+latitude <- as.data.frame(read.csv("Data/latitude.csv"))
 
 
 
@@ -119,8 +145,7 @@ EODB_index1 <- EODB_index %>%
     mutate(EODB_index, EODB_index = ifelse(EODB_index!= "N/A", parse_number(EODB_index),NA ))
 
 
-
-
+#Merge
 Xian <- cost1
 Xian <- merge(Xian,gdp1,by = c("Country","Year"), all.y = TRUE)
 Xian <- merge(Xian,procedures1,by = c("Country","Year"),all.y = TRUE)
@@ -130,8 +155,6 @@ Xian <- merge(Xian,nb1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,LowerS1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,percent_UP1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,EODB_index1,by = c("Country","Year"),all.x = TRUE)
-
-
 
 
 #REPLACE NA VALUES AND REMOVE OTHER JUNK
@@ -263,24 +286,38 @@ Xian <- Xian %>%
 ### Generate outcome variables
 Xian$Y <- as.numeric(cut(Xian$EODB_index, 2))
 Xian <- Xian  %>%
-    select(-HasNA,-Method) 
+    select(-HasNA,-Method,-index) 
 
 
+#Generate for 2019
+Copy2019 <- Xian %>%
+    filter(Year == "2018") %>%
+    mutate(Year = "2019")
+
+Xian <- bind_rows(Xian,Copy2019)
+
+Xian <- Xian %>%
+    arrange(desc(Year)) %>%
+    arrange(Country) 
+
+Xian <- cbind(index = seq(1,length(Xian$Year),1),Xian)
+
+#str(Xian)
 
 
+#Test and train data
 train_data <- Xian %>%
-    filter(Year != "2018") %>%
+    filter(Year != "2019") %>%
     mutate(Country, Country = as.character(Country)) %>%
     select(-index,-Code,-Year,-EODB_index)
-
 
 test_data <- Xian %>%
-    filter(Year == "2018") %>%
+    filter(Year == "2019") %>%
     mutate(Country, Country = as.character(Country)) %>%
     select(-index,-Code,-Year,-EODB_index)
 
 
-
+#Recipe for baking
 rec_obj <- recipe(Y ~ ., data = train_data) %>%
     step_dummy(Country, one_hot = TRUE) %>%
     step_dummy(Cost, one_hot = TRUE) %>%
@@ -289,6 +326,7 @@ rec_obj <- recipe(Y ~ ., data = train_data) %>%
     step_scale(all_predictors(), -all_outcomes()) %>%
     prep(data = train_data)
 
+#Bake both sets for predictors
 Xtrain <- bake(rec_obj, new_data = train_data) %>% select(-Y) 
 Xtest  <- bake(rec_obj, new_data = test_data) %>% select(-Y) 
 
@@ -298,12 +336,14 @@ Xtest  <- bake(rec_obj, new_data = test_data) %>% select(-Y)
 Ytrain <- to_categorical(train_data$Y)
 Ytest  <- to_categorical(test_data$Y)
 
+#Note Length of target labels is 11 after OHE due to having novalue also as a column 
+
 
 
 # Building our Artificial Neural Network
 model <- keras_model_sequential()
 
-model %>% 
+model <- model %>% 
     # First hidden layer
     layer_dense(units= 80, activation= "relu", kernel_initializer = "uniform",input_shape = ncol(Xtrain)) %>% 
     #layer_dense(units= 16, activation= "relu", kernel_initializer = "uniform") %>% 
@@ -312,9 +352,10 @@ model %>%
 
 
 # Compile ANN
-model %>%  compile(optimizer = 'adam', loss  = 'binary_crossentropy', metrics   = 'accuracy' )
+model <- model %>%  compile(optimizer = 'adam', loss  = 'binary_crossentropy', metrics   = 'accuracy' )
 
 
+# Store the fitting history in `history` 
 history <- model %>% fit(
     as.matrix(Xtrain), 
     as.matrix(Ytrain), 
@@ -323,11 +364,17 @@ history <- model %>% fit(
     validation_split = 0.2
 )
 
+# Plot the history
+#plot(history)
 
+
+
+
+# Predict the classes for the test data
 pred <- model %>% predict_classes(as.matrix(Xtest))
 
 # Confusion matrix
-#table(actual=test_data$Y, pred)
+table(actual=test_data$Y, pred)
 
 
 #Predict probabilities
@@ -355,74 +402,66 @@ Top_2_cat <- YProb %>%
     select(Country)
 
 OutputRank <- as.data.frame(bind_rows(Top_1_cat, Top_2_cat))
-
 OutputRank <- OutputRank %>%
     mutate(Rank = seq(1,length(OutputRank$Country),1))
+OutputRank <- inner_join(OutputRank,latitude,by = "Country")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#install.packages('rsconnect')
-#install.packages("shinydashboard")
-#install.packages("shinythemes")
-library(shinythemes)
-library(shiny)
-library(shinydashboard)
-#library(devtools)
-#install_github("nik01010/dashboardthemes")
-#library(dashboardthemes)
 
 header <- dashboardHeader(
-    title = "Start-Up Global",
+    title = span("Start-Up Global",style = "font-size:25px"),
     titleWidth = 300
 )
 
 sidebar <- dashboardSidebar(sidebarMenuOutput('menu'))
 
+
 body <- dashboardBody(
     
-    #shinyDashboardThemes(theme = "blue_gradient"),
+    tags$style(make_css(list('.box',c('font-size'),c('13px')))),
+    
+    #shinyDashboardThemes(theme = "grey_dark"),
     
     tabItems(
         # homepage tab content
         tabItem(tabName="hp",
                 fluidRow(
-                    box(title= "Project Inrtoduction",height = 150,width = 4)),
+                    box(title= span('Project Introduction',style="font-size:20px"),uiOutput("projinfo"),height = 150,width = 12,solidHeader = TRUE,status="primary")),
                 fluidRow(
-                    box(title = "Global Overview",plotOutput("plot1"),height = 500,width = 5),
-                    box(title="Best and worst performing countries historically",plotOutput("plot2"),height = 500,width = 5)),
+                    box(title = span('Global Overview',style="font-size:20px"),plotOutput("plot1"),height = 480,width = 6,solidHeader = TRUE,background ="black"),
+                    box(title=span('Best/Worst Performing Countries',style="font-size:20px"),plotOutput("plot2"),height = 480,solidHeader = TRUE,width = 6,background ="black")),
                 fluidRow(
-                    box(title = "Other Information", height = 500,width = 5),
-                    box(title = "Feature Correltaion",plotOutput("plot3"),height = 500,width = 5))),
+                    box(title = span('Feature Description',style="font-size:20px"), uiOutput("featinfo"),solidHeader = TRUE,height = 480,width = 6,background ="black"),
+                    box(title = span('Feature Correlation',style="font-size:20px"),solidHeader = TRUE,plotOutput("plot3"),height = 480,width = 6,background ="black"))),
         
         ## second tab content
         tabItem(tabName="countryselect",
                 fluidRow(
-                    box(title = "Select Country" , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,width = 2 ),
-                    box(title = "EODB Rank",textOutput("txtOutput1"),height = 150,width = 2,   tags$head(tags$style("#txtOutput1{color: blue;font-size: 40px;font-style: bold;}")))),
+                    box(title = span('Select Country',style="font-size:20px") , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,solidHeader = TRUE,width = 2,background = "black" ),
+                    box(title = span('EODB Rank',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
+                    box(title = span('Feature Table for 2019',style="font-size:20px"),tableOutput("table1"), height = 150,solidHeader = TRUE,width = 8,tags$head(tags$style('#table1{font-size:9px;}'))),
+                    fluidRow(
+                        box(title = span('Map',style="font-size:20px"),leafletOutput("plot6"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
+                        box(title = span('Urban Population Percentage',style="font-size:20px"),plotOutput("plot4"), height= 470,solidHeader = TRUE,width = 4,background = "black" ),
+                        box(title = span('GDP Trend',style="font-size:20px"),plotOutput("plot5"), height= 470,solidHeader = TRUE,width = 4,background = "black" ))
+                    
+                )),
+        
+        #third tab 
+        tabItem(tabName="rankselect",
+                fluidRow(
+                    box(title = span('Select Rank',style="font-size:20px"), selectInput("RankSelected",label = "",choices = OutputRank$Rank), height = 150,solidHeader = TRUE,width = 2,background = "black"),
+                    box(title = span('Country',style="font-size:20px"),textOutput("txtOutput2"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput2{color: orange;font-size: 30px;font-style: bold;}")),background ="black"),
+                    box(title = span('Feature Table for 2019',style="font-size:20px"),tableOutput("table2"), height = 150,solidHeader = TRUE,width = 8,tags$head(tags$style('#table2{height:15px;font-size:9px;}')))),
                 fluidRow( 
-                    box(title = "Index Table",tableOutput("table1"), height = 600,width = 2),
-                    box(title = "Urban Population",plotOutput("plot4"), height= 480,width = 4),
-                    box(title = "GDP",plotOutput("plot5"), height= 480,width = 4))
-                #box(title = "Extra",plotOutput("plot6"), height= 350,width = 4))
-                
-                
+                    box(title = span('Map',style="font-size:20px"),leafletOutput("plot9"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
+                    box(title = span('Urban Population Percentage',style="font-size:20px"),plotOutput("plot7"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
+                    box(title = span('GDP Trend',style="font-size:20px"),plotOutput("plot8"), height= 470,solidHeader = TRUE,width = 4,background = "black"))
                 
         )
-    )
-)
+    ))
+
+
+ui <- dashboardPage(header,sidebar,body,title = "Start-Up Global")
 
 
 
@@ -430,7 +469,24 @@ body <- dashboardBody(
 
 server <- function(input, output){
     
-    output$menu<-renderMenu({sidebarMenu(menuItem(text='Home',tabName = 'hp'),menuItem(text= "Country Measure",tabName = "countryselect")) })  
+    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:20px"),tabName = 'hp'),menuItem(text= span('Country Measure',style="font-size:20px"),tabName = "countryselect"),menuItem(text= span('Rank Measure',style="font-size:20px"),tabName = "rankselect")) })  
+    
+    
+    output$projinfo <- renderUI({
+        HTML(paste("<p>","The goal of our project is to showcase important socioeconomic factors that makes a country conducive to new business and rank the countries in order of their Ease of Doing Business (EODB) index. This provides a birds-eye view into each country from the perspective of a business owner. To achieve this, we used various indicators from the years 2006 through 2018, and predicted the extent of easiness of doing business in the year 2019 using a deep learning neural network model, obtaining an accuracy of around 85% as a result."))
+    })
+    
+    output$featinfo <- renderUI({
+        HTML(paste0("<p>","<b>","1. Log_GDP","</b>", ": Log transformation of GDP per capita in current U.S dollars. GDP per capita is gross domestic product divided by midyear population. GDP is the sum of gross value added by all resident producers in the economy plus any product taxes and minus any subsidies not included in the value of the products." ,"<br>"  ),
+             paste0("<b>","2. NB ","</b>", ": Multi-Categorical feature representing the number of new limited liability corporations registered in the calendar year. The country is categorized as ‘high’ if the number of new business registered larger than 20000, ‘medium’ if between 1000 and 20000, ‘low’ if smaller than 1000." ,"<br>"  ),
+             paste0("<b>","3. Cost ","</b>", ": Multi-Categorical feature representing the cost to register a business normalized by presenting it as a percentage of gross national income (GNI) per capita. The country is categorized as ‘High’ if the cost in percentage larger than 75, ‘Medium High’ if between 25 and 75, ‘medium low’ if between 25 and 10, ‘low’ if smaller than 10." ,"<br>"  ),
+             paste0("<b>","4. LowerSecondary ","</b>", ": Ratio of people entering last grade of lower secondary education to the actual age population entering last grade." ,"<br>"  ),
+             paste0("<b>","5. Percent_Urban_Population ","</b>", ": Urban population ratio with respect to the whole population." ,"<br>"  ),
+             paste0("<b>","6. procedures ","</b>", ": Start-up procedures are those required to start a business, including interactions to obtain necessary permits and licenses and to complete all inscriptions, verifications, and notifications to start operations." ,"<br>"  ),
+             paste0("<b>","7.	sexratio ","</b>", ": Male to female ratio." ,"<br>"  ),
+             paste0("<b>","8.	time_days  ","</b>", ": Number of days required to start the business" ,"<br>"  )
+        )})
+    
     
     output$plot1 <- renderPlot({
         ExtractCode <- Xian %>%
@@ -448,6 +504,7 @@ server <- function(input, output){
         plot_countries = c('New Zealand', 'Finland', 'Norway', 'Canada', 'Eritrea', 'Central African Republic', 'Iraq', 'Chad')
         bottom_countries = c('Eritrea', 'Equatorial Guinea', 'Central African Republic', 'Iraq', 'Chad')
         index1 <- Xian %>%
+            filter(Year != "2019") %>%
             filter(Country %in% plot_countries) %>%
             select(Country, Year, EODB_index)
         Plot2 <- ggplot(data=index1, aes(x=Year, y=EODB_index, color = Country, group = Country)) +geom_line() + geom_point() + labs(x="Year", y = "rank of ease of doing business")
@@ -501,7 +558,7 @@ server <- function(input, output){
             arrange(Country) %>%
             filter(Country == Countryset)
         colnames(UP1) <- c("Country","Class","Perc")
-        Plot4<- ggplot(UP1, aes(x = 2, y = Perc, fill = Class)) + geom_bar(stat = "identity", color = "white") + coord_polar(theta = "y", start = -pi/2)+ #geom_text(aes(y = round(Perc), label = round(Perc))) +
+        Plot4<- ggplot(UP1, aes(x = 2, y = Perc, fill = Class)) + geom_bar(stat = "identity", color = "white") + coord_polar(theta = "y", start = -pi/2)+ 
             theme_void()+xlim(0.5, 2.5)
         Plot4
     })
@@ -516,16 +573,20 @@ server <- function(input, output){
         Plot5
     })
     
+    output$plot6 <- renderLeaflet({
+        Countryset <- input$CountrySelected
+        leaflet() %>% addTiles(options = providerTileOptions(minZoom = 1, maxZoom = 5)) %>% addMarkers( lat = OutputRank$latitude[which(OutputRank$Country== Countryset)], lng = OutputRank$longitude[which(OutputRank$Country== Countryset)],  popup = Countryset)
+    })
+    
     output$table1 <- renderTable ({
         Countryset <- input$CountrySelected 
         Table1<- Xian %>%
-            filter(Year == '2018') %>%
+            filter(Year == '2019') %>%
             filter(Country == Countryset) %>%
             mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
             mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
             mutate(Urban_Population = format(round(Percent_Urban_Population, 2), nsmall = 2)) %>%
-            select(-Country,-index,-Y,-EODB_index,-LowerSecondary,-Percent_Urban_Population) %>%
-            gather(key= Feature , value = Value)
+            select(-Country,-index,-Y,-EODB_index,-LowerSecondary,-Percent_Urban_Population)
         Table1
     })
     
@@ -535,20 +596,84 @@ server <- function(input, output){
         Text1$Rank
     })
     
+    output$txtOutput2 <- renderText({
+        Rankset <- input$RankSelected
+        Text1<- OutputRank %>% filter(Rank == Rankset) 
+        Countryset <- Text1$Country
+        Countryset
+    })
+    
+    output$table2 <- renderTable ({
+        Rankset <- input$RankSelected
+        Text1<- OutputRank %>% filter(Rank == Rankset) 
+        Countryset <- Text1$Country
+        Table2<- Xian %>%
+            filter(Year == '2019') %>%
+            filter(Country == Countryset) %>%
+            mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
+            mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
+            mutate(Urban_Population = format(round(Percent_Urban_Population, 2), nsmall = 2)) %>%
+            select(-Country,-index,-Y,-EODB_index,-LowerSecondary,-Percent_Urban_Population)
+        Table2
+    })
+    
+    output$plot7 <- renderPlot({
+        Rankset <- input$RankSelected
+        Text1<- OutputRank %>% filter(Rank == Rankset) 
+        Countryset <- Text1$Country 
+        UP <- Xian %>%
+            group_by(Country) %>%
+            summarise(Urban_Portion = mean(Percent_Urban_Population)) %>%
+            mutate(Rural_Portion = 100 - Urban_Portion)
+        UP1 <- UP %>%
+            gather("Urban_Portion","Rural_Portion",2:3)  %>%
+            arrange(Country) %>%
+            filter(Country == Countryset)
+        colnames(UP1) <- c("Country","Class","Perc")
+        Plot7<- ggplot(UP1, aes(x = 2, y = Perc, fill = Class)) + geom_bar(stat = "identity", color = "white") + coord_polar(theta = "y", start = -pi/2)+
+            theme_void()+xlim(0.5, 2.5)
+        Plot7
+    })
+    
+    output$plot8 <- renderPlot({
+        Rankset <- input$RankSelected
+        Text1<- OutputRank %>% filter(Rank == Rankset) 
+        Countryset <- Text1$Country
+        gdpline <- Xian %>%
+            select (Country, Year, Log_GDP) %>%
+            mutate (GDP = exp(Log_GDP)) %>%
+            filter(Country == Countryset)
+        Plot8 <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
+        Plot8
+    })
+    
+    output$plot9 <- renderLeaflet({
+        Rankset <- input$RankSelected
+        Text1<- OutputRank %>% filter(Rank == Rankset) 
+        Countryset <- Text1$Country
+        leaflet() %>% addTiles(options = providerTileOptions(minZoom = 1, maxZoom = 5)) %>% addMarkers( lat = OutputRank$latitude[which(OutputRank$Country== Countryset)], lng = OutputRank$longitude[which(OutputRank$Country== Countryset)],  popup = Countryset)
+    })
+    
     
 }
 
-ui <- dashboardPage(header,sidebar,body,title = "Start-Up Global")
+
+
+
+
 shinyApp(ui,server)
 
 
 
 
-library(rsconnect)
-rsconnect::setAccountInfo(name='neonflux56',
-                          token='D55E3671B8842273FAA12FD48364FC26',
-                          secret='lCgh0c7L9NLvY6nOYd22HOPd9ttr7Oyd0zou5jzI')
 
-rsconnect::deployApp()
+
+
+
+
+
+
+
+
 
 
