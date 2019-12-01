@@ -409,7 +409,7 @@ header <- dashboardHeader(
     titleWidth = 300
 )
 
-sidebar <- dashboardSidebar(sidebarMenuOutput('menu'))
+sidebar <- dashboardSidebar(sidebarMenuOutput('menu'), width = 160)
 
 
 body <- dashboardBody(
@@ -435,7 +435,7 @@ body <- dashboardBody(
                 fluidRow(
                     box(title = span('Select Country',style="font-size:20px") , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,solidHeader = TRUE,width = 2,background = "black" ),
                     box(title = span('EODB Rank',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
-                    box(title = span('Feature Table for 2019',style="font-size:20px"),tableOutput("table1"), height = 150,solidHeader = TRUE,width = 8,tags$head(tags$style('#table1{font-size:9px;}'))),
+                    box(title = span('Feature Table for 2019',style="font-size:20px"),tableOutput("table1"), height = 150,solidHeader = TRUE,width = 8,tags$head(tags$style('#table1{font-size:9px;}')),background = "black"),
                     fluidRow(
                         box(title = span('Map',style="font-size:20px"),leafletOutput("plot6"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
                         box(title = span('Urban Population Percentage',style="font-size:20px"),plotOutput("plot4"), height= 470,solidHeader = TRUE,width = 4,background = "black" ),
@@ -448,7 +448,7 @@ body <- dashboardBody(
                 fluidRow(
                     box(title = span('Select Rank',style="font-size:20px"), selectInput("RankSelected",label = "",choices = OutputRank$Rank), height = 150,solidHeader = TRUE,width = 2,background = "black"),
                     box(title = span('Country',style="font-size:20px"),textOutput("txtOutput2"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput2{color: orange;font-size: 30px;font-style: bold;}")),background ="black"),
-                    box(title = span('Feature Table for 2019',style="font-size:20px"),tableOutput("table2"), height = 150,solidHeader = TRUE,width = 8,tags$head(tags$style('#table2{height:15px;font-size:9px;}')))),
+                    box(title = span('Feature Table for 2019',style="font-size:20px"),tableOutput("table2"), height = 150,solidHeader = TRUE,width = 8,tags$head(tags$style('#table2{font-size:9px;}')),background = "black")),
                 fluidRow( 
                     box(title = span('Map',style="font-size:20px"),leafletOutput("plot9"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
                     box(title = span('Urban Population Percentage',style="font-size:20px"),plotOutput("plot7"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
@@ -466,7 +466,7 @@ ui <- dashboardPage(header,sidebar,body,title = "Start-Up Global")
 
 server <- function(input, output){
     
-    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:20px"),tabName = 'hp'),menuItem(text= span('Country Measure',style="font-size:20px"),tabName = "countryselect"),menuItem(text= span('Rank Measure',style="font-size:20px"),tabName = "rankselect")) })  
+    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 'hp'),menuItem(text= span('Country Measure',style="font-size:18px"),tabName = "countryselect"),menuItem(text= span('Rank Measure',style="font-size:18px"),tabName = "rankselect")) })  
     
     
     output$projinfo <- renderUI({
