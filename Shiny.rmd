@@ -56,7 +56,7 @@ body <- dashboardBody(
             fluidRow(
               box(title = "Select Country" , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,width = 2 ),
               box(title = "EODB Rank",textOutput("txtOutput1"),height = 150,width = 2,   tags$head(tags$style("#txtOutput1{color: blue;font-size: 40px;font-style: bold;}"))),
-              box(title = "Feature Table",tableOutput("table1"), height = 150,width = 7)),
+              box(title = "Feature Table for 2019",tableOutput("table1"), height = 150,width = 7)),
             fluidRow( 
               box(title = "Urban Population",plotOutput("plot4"), height= 480,width = 4),
               box(title = "GDP",plotOutput("plot5"), height= 480,width = 4),
@@ -67,7 +67,7 @@ body <- dashboardBody(
             fluidRow(
               box(title = "Select Rank" , selectInput("RankSelected",label = "",choices = OutputRank$Rank), height = 150,width = 2 ),
               box(title = "Country",textOutput("txtOutput2"),height = 150,width = 2,   tags$head(tags$style("#txtOutput2{color: brown;font-size: 30px;font-style: bold;}"))),
-            box(title = "Feature Table",tableOutput("table2"), height = 150,width = 7)),
+            box(title = "Feature Table for 2019",tableOutput("table2"), height = 150,width = 7)),
             fluidRow( 
               box(title = "Urban Population",plotOutput("plot7"), height= 480,width = 4),
               box(title = "GDP",plotOutput("plot8"), height= 480,width = 4),
@@ -187,7 +187,7 @@ server <- function(input, output){
   output$table1 <- renderTable ({
   Countryset <- input$CountrySelected 
   Table1<- Xian %>%
-  filter(Year == '2018') %>%
+  filter(Year == '2019') %>%
   filter(Country == Countryset) %>%
   mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
   mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
@@ -215,7 +215,7 @@ server <- function(input, output){
   Text1<- OutputRank %>% filter(Rank == Rankset) 
   Countryset <- Text1$Country
   Table2<- Xian %>%
-  filter(Year == '2018') %>%
+  filter(Year == '2019') %>%
   filter(Country == Countryset) %>%
   mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
   mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
