@@ -25,7 +25,7 @@ install_github("nik01010/dashboardthemes")
 LOAD PACKAGES
 
 
-```{r}
+```{r, include=FALSE}
 library(tableHTML)
 library(shinythemes)
 library(shiny)
