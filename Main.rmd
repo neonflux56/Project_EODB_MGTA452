@@ -457,6 +457,8 @@ VISUALIZATION
 
 
 ```{r}
+
+
 Y2 <- as.data.frame(Ytrain) %>%
   mutate(easy = ifelse(as.data.frame(Ytrain)$V2 == 1, 1, 0))
 corrr_analysis <- Xtrain %>%
