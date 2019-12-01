@@ -5,8 +5,8 @@ account: neonflux56
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1545629
-bundleId: 2630589
+bundleId: 2630656
 url: https://neonflux56.shinyapps.io/EODBApp/
-when: 1575232979.01361
+when: 1575234721.87744
 asMultiple: FALSE
 asStatic: FALSE
