@@ -1,5 +1,5 @@
 ---
-title: "Main_Copy
+title: "Main_Copy"
 output: pdf_document
 ---
 
@@ -276,7 +276,22 @@ Xian <- Xian %>%
 ### Generate outcome variables
 Xian$Y <- as.numeric(cut(Xian$EODB_index, 2))
 Xian <- Xian  %>%
-  select(-HasNA,-Method) 
+  select(-HasNA,-Method,-index) 
+
+Copy2019 <- Xian %>%
+  filter(Year == "2018") %>%
+  mutate(Year = "2019")
+
+Xian <- bind_rows(Xian,Copy2019)
+
+Xian <- Xian %>%
+  arrange(desc(Year)) %>%
+  arrange(Country) 
+  
+Xian <- cbind(index = seq(1,length(Xian$Year),1),Xian)
+  
+
+head(Xian)
 
 str(Xian)
 
@@ -286,13 +301,13 @@ str(Xian)
 ```{r}
 #Test and train data
 train_data <- Xian %>%
-  filter(Year != "2018") %>%
+  filter(Year != "2019") %>%
   mutate(Country, Country = as.character(Country)) %>%
   select(-index,-Code,-Year,-EODB_index)
 
 str(train_data)
 test_data <- Xian %>%
-  filter(Year == "2018") %>%
+  filter(Year == "2019") %>%
   mutate(Country, Country = as.character(Country)) %>%
   select(-index,-Code,-Year,-EODB_index)
 
@@ -530,9 +545,12 @@ mapCountryData(mapped_data, nameColumnToPlot = "Rank", colourPalette=c('#1E6C03'
 plot_countries = c('New Zealand', 'Finland', 'Norway', 'Canada', 'Eritrea', 'Central African Republic', 'Iraq', 'Chad')
 bottom_countries = c('Eritrea', 'Equatorial Guinea', 'Central African Republic', 'Iraq', 'Chad')
 index1 <- Xian %>%
+  filter(Year != "2019") %>%
   filter(Country %in% plot_countries) %>%
   select(Country, Year, EODB_index)
 trending_line <- ggplot(data=index1, aes(x=Year, y=EODB_index, color = Country, group = Country)) +geom_line() + geom_point() + labs(x="Year", y = "rank of ease of doing business")
+
+trending_line
 
 ```
 

@@ -545,6 +545,7 @@ mapCountryData(mapped_data, nameColumnToPlot = "Rank", colourPalette=c('#1E6C03'
 plot_countries = c('New Zealand', 'Finland', 'Norway', 'Canada', 'Eritrea', 'Central African Republic', 'Iraq', 'Chad')
 bottom_countries = c('Eritrea', 'Equatorial Guinea', 'Central African Republic', 'Iraq', 'Chad')
 index1 <- Xian %>%
+  filter(Year != "2019") %>%
   filter(Country %in% plot_countries) %>%
   select(Country, Year, EODB_index)
 trending_line <- ggplot(data=index1, aes(x=Year, y=EODB_index, color = Country, group = Country)) +geom_line() + geom_point() + labs(x="Year", y = "rank of ease of doing business")
