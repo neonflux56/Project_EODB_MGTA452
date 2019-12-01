@@ -1,0 +1,23 @@
+---
+title: "new data features"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+unemployment <- read.csv("Data/unemployment.csv")
+
+unemployment1 <- unemployment %>%
+  select (Country.Code , Country.Name, X2006:X2018) %>%
+  gather("Year","Unemployment",3:15) %>%
+  arrange(desc(Year)) %>%
+  arrange(Country.Name)  %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  select(Country = Country.Name, Code = Country.Code, Year,Unemployment)
+
+unemployment1 <- unemployment1 %>%
+  filter(Country %in% countries$V1 )  %>%
+  arrange(desc(Year)) %>%
+  arrange(Country) 
+```
+

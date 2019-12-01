@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 #### Shiny Visualization
 ```{r}
 
+install.packages("leaflet")
+library(leaflet)
 
 install.packages('rsconnect')
 install.packages("shinydashboard")
@@ -25,6 +27,10 @@ install_github("nik01010/dashboardthemes")
 library(dashboardthemes)
 
 
+latitude <- as.data.frame(read.csv("Data/latitude.csv"))
+OutputRank <- inner_join(OutputRank,latitude,by = "Country")
+
+
 ```
 
 ```{r}
@@ -32,6 +38,8 @@ header <- dashboardHeader(
   title = "Start-Up Global",
   titleWidth = 300
 )
+
+
 
 sidebar <- dashboardSidebar(sidebarMenuOutput('menu'))
 
@@ -54,22 +62,24 @@ body <- dashboardBody(shinyDashboardThemes(theme = "blue_gradient"),
             fluidRow(
               box(title = "Select Country" , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,width = 2 ),
               box(title = "EODB Rank",textOutput("txtOutput1"),height = 150,width = 2,   tags$head(tags$style("#txtOutput1{color: blue;font-size: 40px;font-style: bold;}"))),
-              box(title = "Feature Table",tableOutput("table1"), height = 150,width = 7)),
+              box(title = "Feature Table for 2019",tableOutput("table1"), height = 150,width = 7)),
             fluidRow( 
+              box(title = "Map",leafletOutput("plot6"), height= 480,width = 4),
               box(title = "Urban Population",plotOutput("plot4"), height= 480,width = 4),
-              box(title = "GDP",plotOutput("plot5"), height= 480,width = 4),
-              box(title = "Extra",plotOutput("plot6"), height= 480,width = 4))
+              box(title = "GDP",plotOutput("plot5"), height= 480,width = 4))
+              
             ),
    
     tabItem(tabName="rankselect",
             fluidRow(
               box(title = "Select Rank" , selectInput("RankSelected",label = "",choices = OutputRank$Rank), height = 150,width = 2 ),
               box(title = "Country",textOutput("txtOutput2"),height = 150,width = 2,   tags$head(tags$style("#txtOutput2{color: brown;font-size: 30px;font-style: bold;}"))),
-            box(title = "Feature Table",tableOutput("table2"), height = 150,width = 7)),
+            box(title = "Feature Table for 2019",tableOutput("table2"), height = 150,width = 7)),
             fluidRow( 
+              box(title = "Map",leafletOutput("plot9"), height= 480,width = 4),
               box(title = "Urban Population",plotOutput("plot7"), height= 480,width = 4),
-              box(title = "GDP",plotOutput("plot8"), height= 480,width = 4),
-              box(title = "Extra",plotOutput("plot9"), height= 480,width = 4))
+              box(title = "GDP",plotOutput("plot8"), height= 480,width = 4))
+              
      )
   )
 )
@@ -172,20 +182,16 @@ server <- function(input, output){
     Plot5
   })
   
-  output$plot6 <- renderPlot({
+
+  output$plot6 <- renderLeaflet({
     Countryset <- input$CountrySelected
-    gdpline <- Xian %>%
-                select (Country, Year, Log_GDP) %>%
-                mutate (GDP = exp(Log_GDP)) %>%
-                filter(Country == Countryset)
-    Plot6 <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
-    Plot6
+    leaflet() %>% addTiles() %>% addMarkers( lat = OutputRank$latitude[which(OutputRank$Country== Countryset)], lng = OutputRank$longitude[which(OutputRank$Country== Countryset)],  popup = Countryset)
   })
   
   output$table1 <- renderTable ({
   Countryset <- input$CountrySelected 
   Table1<- Xian %>%
-  filter(Year == '2018') %>%
+  filter(Year == '2019') %>%
   filter(Country == Countryset) %>%
   mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
   mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
@@ -213,7 +219,7 @@ server <- function(input, output){
   Text1<- OutputRank %>% filter(Rank == Rankset) 
   Countryset <- Text1$Country
   Table2<- Xian %>%
-  filter(Year == '2018') %>%
+  filter(Year == '2019') %>%
   filter(Country == Countryset) %>%
   mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
   mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
@@ -253,18 +259,13 @@ server <- function(input, output){
     Plot8
   })
   
-  output$plot9 <- renderPlot({
-    Rankset <- input$RankSelected
+    
+    output$plot9 <- renderLeaflet({
+  Rankset <- input$RankSelected
   Text1<- OutputRank %>% filter(Rank == Rankset) 
   Countryset <- Text1$Country
-    gdpline <- Xian %>%
-                select (Country, Year, Log_GDP) %>%
-                mutate (GDP = exp(Log_GDP)) %>%
-                filter(Country == Countryset)
-    Plot9 <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
-    Plot9
+    leaflet() %>% addTiles() %>% addMarkers( lat = OutputRank$latitude[which(OutputRank$Country== Countryset)], lng = OutputRank$longitude[which(OutputRank$Country== Countryset)],  popup = Countryset)
   })
-    
     
 }
 
