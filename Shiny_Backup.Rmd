@@ -35,7 +35,13 @@ header <- dashboardHeader(
 
 sidebar <- dashboardSidebar(sidebarMenuOutput('menu'))
 
-body <- dashboardBody(
+body <- dashboardBody(tags$head(tags$style(HTML('.main-header .logo{
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font_weigt: bold;
+  font_size: 40px;
+  
+  }
+  '))),
   
   shinyDashboardThemes(theme = "blue_gradient"),
   
@@ -43,38 +49,39 @@ body <- dashboardBody(
     # homepage tab content
     tabItem(tabName="hp",
             fluidRow(
-              box(title= "Project Inrtoduction",height = 150,width = 4)),
+              box(title= "Project Introduction",height = 150,width = 12,solidHeader = TRUE,status="primary")),
             fluidRow(
-              box(title = "Global Overview",plotOutput("plot1"),height = 500,width = 5),
-              box(title="Best and worst performing countries historically",plotOutput("plot2"),height = 500,width = 5)),
+              box(title = "Global Overview",plotOutput("plot1"),height = 500,width = 6,solidHeader = TRUE,background ="green"),
+              box(title="Best and worst performing countries historically",plotOutput("plot2"),height = 500,solidHeader = TRUE,width = 6,background ="yellow")),
             fluidRow(
-              box(title = "Other Information", height = 500,width = 5),
-              box(title = "Feature Correltaion",plotOutput("plot3"),height = 500,width = 5))),
+              box(title = "Other Information", solidHeader = TRUE,height = 500,width = 6,background ="teal"),
+              box(title = "Feature Correltaion",solidHeader = TRUE,plotOutput("plot3"),height = 500,width = 6,background ="purple"))),
   
     ## second tab content
     tabItem(tabName="countryselect",
             fluidRow(
-              box(title = "Select Country" , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,width = 2 ),
-              box(title = "EODB Rank",textOutput("txtOutput1"),height = 150,width = 2,   tags$head(tags$style("#txtOutput1{color: blue;font-size: 40px;font-style: bold;}"))),
-              box(title = "Feature Table",tableOutput("table1"), height = 150,width = 7)),
-            fluidRow( 
-              box(title = "Urban Population",plotOutput("plot4"), height= 480,width = 4),
-              box(title = "GDP",plotOutput("plot5"), height= 480,width = 4),
-              box(title = "Extra",plotOutput("plot6"), height= 480,width = 4))
-            ),
-   
+              box(title = "Select Country" , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,solidHeader = TRUE,width = 2,background = "purple" ),
+              box(title = "EODB Rank",textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: blue;font-size: 40px;font-style: bold;}")),background = "yellow" ),
+              box(title = "Feature Table",tableOutput("table1"), height = 150,solidHeader = TRUE,width = 8,background = "navy"),
+            fluidRow(
+              box(title = "Urban Population",plotOutput("plot4"), height= 480,solidHeader = TRUE,width = 4,background = "teal" ),
+              box(title = "GDP",plotOutput("plot5"), height= 480,solidHeader = TRUE,width = 4,background = "red" ),
+              box(title = "Extra",plotOutput("plot6"), height= 480,solidHeader = TRUE,width = 4,background = "light-blue") )
+            )),
+    
+   #third tab content
     tabItem(tabName="rankselect",
             fluidRow(
-              box(title = "Select Rank" , selectInput("RankSelected",label = "",choices = OutputRank$Rank), height = 150,width = 2 ),
-              box(title = "Country",textOutput("txtOutput2"),height = 150,width = 2,   tags$head(tags$style("#txtOutput2{color: brown;font-size: 30px;font-style: bold;}"))),
-            box(title = "Feature Table",tableOutput("table2"), height = 150,width = 7)),
+              box(title = "Select Rank" , selectInput("RankSelected",label = "",choices = OutputRank$Rank), height = 150,solidHeader = TRUE,width = 2,background = "purple"),
+              box(title = "Country",textOutput("txtOutput2"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput2{color: brown;font-size: 30px;font-style: bold;}")),background ="yellow"),
+            box(title = "Feature Table",tableOutput("table2"), height = 150,solidHeader = TRUE,width = 8,background = "navy")),
             fluidRow( 
-              box(title = "Urban Population",plotOutput("plot7"), height= 480,width = 4),
-              box(title = "GDP",plotOutput("plot8"), height= 480,width = 4),
-              box(title = "Extra",plotOutput("plot9"), height= 480,width = 4))
+              box(title = "Urban Population",plotOutput("plot7"), height= 450,solidHeader = TRUE,width = 4,background = "teal"),
+              box(title = "GDP",plotOutput("plot8"), height= 450,solidHeader = TRUE,width = 4,background = "red"),
+              box(title = "Extra",plotOutput("plot9"), height= 450,solidHeader = TRUE,width = 4,background = "light-blue"))
      )
-  )
-)
+  ))
+
 
 
 
@@ -271,6 +278,7 @@ server <- function(input, output){
 }
 
 ui <- dashboardPage(header,sidebar,body,title = "Start-Up Global")
+                    
 shinyApp(ui,server)
 
 
