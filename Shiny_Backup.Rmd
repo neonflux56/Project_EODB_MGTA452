@@ -1,0 +1,294 @@
+---
+title: "Shiny_Copy"
+resource_files:
+- Main.rmd
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#### Shiny Visualization
+```{r}
+
+
+install.packages('rsconnect')
+install.packages("shinydashboard")
+install.packages("shinythemes")
+library(shinythemes)
+library(shiny)
+library(shinydashboard)
+library(devtools)
+install_github("nik01010/dashboardthemes")
+library(dashboardthemes)
+
+
+```
+
+```{r}
+header <- dashboardHeader(
+  title = "Start-Up Global",
+  titleWidth = 300
+)
+
+sidebar <- dashboardSidebar(sidebarMenuOutput('menu'))
+
+body <- dashboardBody(
+  
+  shinyDashboardThemes(theme = "blue_gradient"),
+  
+  tabItems(
+    # homepage tab content
+    tabItem(tabName="hp",
+            fluidRow(
+              box(title= "Project Inrtoduction",height = 150,width = 4)),
+            fluidRow(
+              box(title = "Global Overview",plotOutput("plot1"),height = 500,width = 5),
+              box(title="Best and worst performing countries historically",plotOutput("plot2"),height = 500,width = 5)),
+            fluidRow(
+              box(title = "Other Information", height = 500,width = 5),
+              box(title = "Feature Correltaion",plotOutput("plot3"),height = 500,width = 5))),
+  
+    ## second tab content
+    tabItem(tabName="countryselect",
+            fluidRow(
+              box(title = "Select Country" , selectInput("CountrySelected",label = "",choices = Xian$Country), height = 150,width = 2 ),
+              box(title = "EODB Rank",textOutput("txtOutput1"),height = 150,width = 2,   tags$head(tags$style("#txtOutput1{color: blue;font-size: 40px;font-style: bold;}"))),
+              box(title = "Feature Table",tableOutput("table1"), height = 150,width = 7)),
+            fluidRow( 
+              box(title = "Urban Population",plotOutput("plot4"), height= 480,width = 4),
+              box(title = "GDP",plotOutput("plot5"), height= 480,width = 4),
+              box(title = "Extra",plotOutput("plot6"), height= 480,width = 4))
+            ),
+   
+    tabItem(tabName="rankselect",
+            fluidRow(
+              box(title = "Select Rank" , selectInput("RankSelected",label = "",choices = OutputRank$Rank), height = 150,width = 2 ),
+              box(title = "Country",textOutput("txtOutput2"),height = 150,width = 2,   tags$head(tags$style("#txtOutput2{color: brown;font-size: 30px;font-style: bold;}"))),
+            box(title = "Feature Table",tableOutput("table2"), height = 150,width = 7)),
+            fluidRow( 
+              box(title = "Urban Population",plotOutput("plot7"), height= 480,width = 4),
+              box(title = "GDP",plotOutput("plot8"), height= 480,width = 4),
+              box(title = "Extra",plotOutput("plot9"), height= 480,width = 4))
+     )
+  )
+)
+
+
+
+```
+
+
+
+
+```{r}
+
+
+server <- function(input, output){
+  
+  output$menu<-renderMenu({sidebarMenu(menuItem(text='Home',tabName = 'hp'),menuItem(text= "Country Measure",tabName = "countryselect"),menuItem(text= "Rank Measure",tabName = "rankselect")) })  
+  
+  output$plot1 <- renderPlot({
+  ExtractCode <- Xian %>%
+    group_by(Country,Code) %>%
+    summarise(size = n()) %>%
+    select(-size)
+  OutputRank <- OutputRank %>%
+    rowwise() %>%
+    mutate(Country, Code = ExtractCode$Code[which(ExtractCode$Country==Country)])
+  mapped_data <- joinCountryData2Map(OutputRank, joinCode = "ISO3", nameJoinColumn = "Code") 
+  mapCountryData(mapped_data, nameColumnToPlot = "Rank", colourPalette=c('#1E6C03', '#E5FEDC'), addLegend='TRUE', borderCol = "grey", mapTitle = "Rank - Ease Of Doing Business")
+  })
+  
+  output$plot2 <- renderPlot({
+    plot_countries = c('New Zealand', 'Finland', 'Norway', 'Canada', 'Eritrea', 'Central African Republic', 'Iraq', 'Chad')
+    bottom_countries = c('Eritrea', 'Equatorial Guinea', 'Central African Republic', 'Iraq', 'Chad')
+    index1 <- Xian %>%
+      filter(Country %in% plot_countries) %>%
+      select(Country, Year, EODB_index)
+    Plot2 <- ggplot(data=index1, aes(x=Year, y=EODB_index, color = Country, group = Country)) +geom_line() + geom_point() + labs(x="Year", y = "rank of ease of doing business")
+    Plot2
+    })
+  
+  output$plot3 <- renderPlot({
+  Y2 <- as.data.frame(Ytrain) %>%
+    mutate(easy = ifelse(as.data.frame(Ytrain)$V2 == 1, 1, 0))
+  corrr_analysis <- Xtrain %>%
+    mutate(EODB_Measure = as.vector(Y2$easy)) %>%
+    correlate() %>%
+    focus(EODB_Measure) %>%
+    rename(feature = rowname) %>%
+    arrange(abs(EODB_Measure)) %>%
+    mutate(feature = as_factor(feature)) %>%
+    arrange(desc(abs(EODB_Measure)))
+  corrr_analysis2 <- corrr_analysis %>%
+    filter(!startsWith(as.character(feature),"Country"))
+
+  corrr_analysis2 %>%ggplot(aes(x = EODB_Measure, y = fct_reorder(feature, desc(EODB_Measure)))) + geom_point() +
+    # Positive Correlations - Contribute 
+    geom_segment(aes(xend = 0, yend = feature), 
+               color = palette_light()[[2]], 
+               data = corrr_analysis2 %>% filter(EODB_Measure > 0)) +
+    geom_point(color = palette_light()[[2]], 
+             data = corrr_analysis2 %>% filter(EODB_Measure > 0)) +
+    # Negative Correlations - Prevent 
+    geom_segment(aes(xend = 0, yend = feature), 
+               color = palette_light()[[1]], 
+               data = corrr_analysis2 %>% filter(EODB_Measure < 0)) +
+    geom_point(color = palette_light()[[1]], 
+             data = corrr_analysis2 %>% filter(EODB_Measure < 0)) +
+    # Vertical lines
+    geom_vline(xintercept = 0, color = palette_light()[[5]], size = 1, linetype = 2) +
+    geom_vline(xintercept = -0.25, color = palette_light()[[5]], size = 1, linetype = 2) +
+    geom_vline(xintercept = 0.25, color = palette_light()[[5]], size = 1, linetype = 2) +
+    # Aesthetics
+    theme_tq() +
+    labs(title = "Feature correlation in training data",y = "Feature",x = "Correlation Measure")
+  })
+  
+  output$plot4 <- renderPlot({
+    Countryset <- input$CountrySelected 
+    UP <- Xian %>%
+      group_by(Country) %>%
+      summarise(Urban_Portion = mean(Percent_Urban_Population)) %>%
+      mutate(Rural_Portion = 100 - Urban_Portion)
+    UP1 <- UP %>%
+      gather("Urban_Portion","Rural_Portion",2:3)  %>%
+      arrange(Country) %>%
+      filter(Country == Countryset)
+    colnames(UP1) <- c("Country","Class","Perc")
+    Plot4<- ggplot(UP1, aes(x = 2, y = Perc, fill = Class)) + geom_bar(stat = "identity", color = "white") + coord_polar(theta = "y", start = -pi/2)+ #geom_text(aes(y = round(Perc), label = round(Perc))) +
+            theme_void()+xlim(0.5, 2.5)
+    Plot4
+    })
+  
+  output$plot5 <- renderPlot({
+    Countryset <- input$CountrySelected
+    gdpline <- Xian %>%
+                select (Country, Year, Log_GDP) %>%
+                mutate (GDP = exp(Log_GDP)) %>%
+                filter(Country == Countryset)
+    Plot5 <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
+    Plot5
+  })
+  
+  output$plot6 <- renderPlot({
+    Countryset <- input$CountrySelected
+    gdpline <- Xian %>%
+                select (Country, Year, Log_GDP) %>%
+                mutate (GDP = exp(Log_GDP)) %>%
+                filter(Country == Countryset)
+    Plot6 <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
+    Plot6
+  })
+  
+  output$table1 <- renderTable ({
+  Countryset <- input$CountrySelected 
+  Table1<- Xian %>%
+  filter(Year == '2018') %>%
+  filter(Country == Countryset) %>%
+  mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
+  mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
+  mutate(Urban_Population = format(round(Percent_Urban_Population, 2), nsmall = 2)) %>%
+  select(-Country,-index,-Y,-EODB_index,-LowerSecondary,-Percent_Urban_Population)# %>%
+  #gather(key= Feature , value = Value)
+  Table1
+    })
+  
+  output$txtOutput1 <- renderText({
+    Countryset <- input$CountrySelected 
+    Text1<- OutputRank %>% filter(Country == Countryset) 
+    Text1$Rank
+  })
+  
+  output$txtOutput2 <- renderText({
+    Rankset <- input$RankSelected
+    Text1<- OutputRank %>% filter(Rank == Rankset) 
+    Countryset <- Text1$Country
+    Countryset
+  })
+    
+  output$table2 <- renderTable ({
+  Rankset <- input$RankSelected
+  Text1<- OutputRank %>% filter(Rank == Rankset) 
+  Countryset <- Text1$Country
+  Table2<- Xian %>%
+  filter(Year == '2018') %>%
+  filter(Country == Countryset) %>%
+  mutate(Log_GDP = format(round(Log_GDP, 2), nsmall = 2)) %>%
+  mutate(Lower_Secondary = format(round(LowerSecondary, 2), nsmall = 2)) %>%
+  mutate(Urban_Population = format(round(Percent_Urban_Population, 2), nsmall = 2)) %>%
+  select(-Country,-index,-Y,-EODB_index,-LowerSecondary,-Percent_Urban_Population)# %>%
+  #gather(key= Feature , value = Value)
+  Table2
+    })
+    
+  output$plot7 <- renderPlot({
+    Rankset <- input$RankSelected
+  Text1<- OutputRank %>% filter(Rank == Rankset) 
+  Countryset <- Text1$Country 
+    UP <- Xian %>%
+      group_by(Country) %>%
+      summarise(Urban_Portion = mean(Percent_Urban_Population)) %>%
+      mutate(Rural_Portion = 100 - Urban_Portion)
+    UP1 <- UP %>%
+      gather("Urban_Portion","Rural_Portion",2:3)  %>%
+      arrange(Country) %>%
+      filter(Country == Countryset)
+    colnames(UP1) <- c("Country","Class","Perc")
+    Plot7<- ggplot(UP1, aes(x = 2, y = Perc, fill = Class)) + geom_bar(stat = "identity", color = "white") + coord_polar(theta = "y", start = -pi/2)+ #geom_text(aes(y = round(Perc), label = round(Perc))) +
+            theme_void()+xlim(0.5, 2.5)
+    Plot7
+    })
+  
+  output$plot8 <- renderPlot({
+    Rankset <- input$RankSelected
+  Text1<- OutputRank %>% filter(Rank == Rankset) 
+  Countryset <- Text1$Country
+    gdpline <- Xian %>%
+                select (Country, Year, Log_GDP) %>%
+                mutate (GDP = exp(Log_GDP)) %>%
+                filter(Country == Countryset)
+    Plot8 <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
+    Plot8
+  })
+  
+  output$plot9 <- renderPlot({
+    Rankset <- input$RankSelected
+  Text1<- OutputRank %>% filter(Rank == Rankset) 
+  Countryset <- Text1$Country
+    gdpline <- Xian %>%
+                select (Country, Year, Log_GDP) %>%
+                mutate (GDP = exp(Log_GDP)) %>%
+                filter(Country == Countryset)
+    Plot9 <- ggplot(data = gdpline, aes(x = Year, y = GDP, group = 1)) + geom_line() + geom_point()
+    Plot9
+  })
+    
+    
+}
+
+ui <- dashboardPage(header,sidebar,body,title = "Start-Up Global")
+shinyApp(ui,server)
+
+
+
+```
+
+
+DEPLOY APP
+
+
+```{r}
+
+library(rsconnect)
+rsconnect::setAccountInfo(name='neonflux56',
+			  token='D55E3671B8842273FAA12FD48364FC26',
+			  secret='lCgh0c7L9NLvY6nOYd22HOPd9ttr7Oyd0zou5jzI')
+
+rsconnect::deployApp()
+
+
+```
