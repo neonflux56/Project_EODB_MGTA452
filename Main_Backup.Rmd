@@ -20,6 +20,8 @@ library(yardstick)
 library(corrr)
 library(ggforce)
 library(scales)
+
+library(glmnet)
 ```
 
 
@@ -299,7 +301,15 @@ str(Xian)
 ```
 
 ```{r}
+
+write.csv(Xian, file = "finaldf.csv")
+
+
+
 #Test and train data
+
+
+
 train_data <- Xian %>%
   filter(Year != "2019") %>%
   mutate(Country, Country = as.character(Country)) %>%
@@ -312,6 +322,32 @@ test_data <- Xian %>%
   select(-index,-Code,-Year,-EODB_index)
 
 str(test_data)
+
+
+#Logistic Regrssion
+
+
+logitProjects <- glm(Y==1~
+                       sexratio + 
+                       NB + 
+                       LowerSecondary + 
+                       Percent_Urban_Population,
+                     data=train_data,
+                     family=binomial(link="logit"))
+
+
+
+logitProjectsStats <- tidy(logitProjects)
+
+ProbCompleteLogit <- predict(logitProjects,newdata = test_data,type = "response")
+PredStatusLogit <- if_else(ProbCompleteLogit > 0.5,'1','2')
+
+confMat1 <- table(actual = test_data$Y,PredStatusLogit)
+acc <- sum(diag(confMat1))/sum(confMat1)
+
+
+
+
 
 ```
 
@@ -333,12 +369,15 @@ rec_obj
 Xtrain <- bake(rec_obj, new_data = train_data) %>% select(-Y) 
 Xtest  <- bake(rec_obj, new_data = test_data) %>% select(-Y) 
 
+
+write.csv(Xtrain,"Xtrain.csv")
 #str(Xtrain)
 #glimpse(Xtrain)
 # Response variables both sets
 Ytrain <- to_categorical(train_data$Y)
 Ytest  <- to_categorical(test_data$Y)
 
+write.csv(Ytrain,"Ytrain.csv")
 #Note Length of target labels is 11 after OHE due to having novalue also as a column 
 
 ```
@@ -418,7 +457,10 @@ pred <- model %>% predict_classes(as.matrix(Xtest))
 
 # Confusion matrix
 table(actual=test_data$Y, pred)
+confMat2 <- table(actual = test_data$Y,pred)
+acc1 <- sum(diag(confMat2))/sum(confMat2)
 
+print(paste("Accuracy using deep learning: ", acc1))
 
 #Predict probabilities
 YProb  <- predict_proba(object = model, x = as.matrix(Xtest))
@@ -431,7 +473,12 @@ YProb <- YProb %>%
   mutate(asdad =  max(none,easy,noteasy)) 
 
 YProb$Predicted = as.vector(pred)
+
+
+
+
 YProb$Country = test_data$Country
+
 
 
 Top_1_cat <- YProb %>%
@@ -448,6 +495,8 @@ OutputRank <- as.data.frame(bind_rows(Top_1_cat, Top_2_cat))
 
 OutputRank <- OutputRank %>%
   mutate(Rank = seq(1,length(OutputRank$Country),1))
+
+write.csv(OutputRank,file = "finalOutput.csv")
 
 #YClassProb <- predict_classes(object = model, x = as.matrix(Xtest)) %>% as.vector()
 
