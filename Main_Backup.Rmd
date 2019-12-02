@@ -144,6 +144,8 @@ Xian <- merge(Xian,LowerS1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,percent_UP1,by = c("Country","Year"),all.y = TRUE)
 Xian <- merge(Xian,EODB_index1,by = c("Country","Year"),all.x = TRUE)
 
+
+
 ```
 
 
@@ -160,7 +162,7 @@ Xian <- Xian1 %>%
   mutate(index = seq(1,length(Xian1$Year),1)) %>%
   filter(index <= 2080 ) %>%
   select(index,Country,Code,Year,everything()) 
-
+Xian2 <- Xian
 
 ### Cost
 natest <- Xian %>%
@@ -298,6 +300,33 @@ head(Xian)
 str(Xian)
 
 
+
+
+
+
+nb1 %>% ggplot(aes(x= NB)) + geom_histogram(color="blue", fill="light blue") + labs(title = "NB - Before Preprocessing", x = "NB")+
+  theme_minimal()
+
+Xian %>% ggplot(aes(x=NB)) + geom_histogram(stat = "count",color="blue", fill="light blue") + labs(title = "NB - After Preprocessing", x = "NB Categories")+
+  theme_minimal()
+
+Xian2 %>% filter(Country=="Eritrea") %>% ggplot( aes(x=Year, y=Percent_Urban_Population)) +
+  geom_bar(stat="identity", fill="steelblue")+ labs(title = "Percent_Urban_Population for Eritrea - Before  " , y = "Percent_Urban_Population")+
+  theme_minimal()
+
+Xian %>% filter(Country=="Eritrea") %>% ggplot( aes(x=Year, y=Percent_Urban_Population)) +
+  geom_bar(stat="identity", fill="steelblue")+ labs(title = "Percent_Urban_Population for Eritrea - After " , y = "Percent_Urban_Population")+
+  theme_minimal()
+
+Xian2 %>% filter(Country=="Malta") %>% ggplot( aes(x=Year, y=time_days)) +
+  geom_bar(stat="identity", fill=" green")+ labs(title = "Time(days) for Malta - Before " , y = "Time(days)")+
+  theme_minimal()
+
+Xian %>% filter(Country=="Malta") %>% ggplot( aes(x=Year, y=time_days)) +
+  geom_bar(stat="identity", fill=" green")+labs(title = "Time(days) for Malta - After " , y = "Time(days)")+
+  theme_minimal()
+
+
 ```
 
 ```{r}
@@ -346,7 +375,7 @@ confMat1 <- table(actual = test_data$Y,PredStatusLogit)
 acc <- sum(diag(confMat1))/sum(confMat1)
 
 
-
+print(paste("Accuracy using logit regression: ",acc) )
 
 
 ```
@@ -371,7 +400,7 @@ Xtest  <- bake(rec_obj, new_data = test_data) %>% select(-Y)
 
 
 write.csv(Xtrain,"Xtrain.csv")
-#str(Xtrain)
+str(Xtrain)
 #glimpse(Xtrain)
 # Response variables both sets
 Ytrain <- to_categorical(train_data$Y)
@@ -430,6 +459,7 @@ model %>%  compile(optimizer = 'adam', loss  = 'binary_crossentropy', metrics   
 
 
 ```{r}
+
 
 # Store the fitting history in `history` 
 history <- model %>% fit(

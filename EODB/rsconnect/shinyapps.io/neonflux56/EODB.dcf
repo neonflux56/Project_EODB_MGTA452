@@ -1,0 +1,12 @@
+name: EODB
+title: EODB
+username:
+account: neonflux56
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1549728
+bundleId: 2633090
+url: https://neonflux56.shinyapps.io/EODB/
+when: 1575308500.80834
+asMultiple: FALSE
+asStatic: FALSE
