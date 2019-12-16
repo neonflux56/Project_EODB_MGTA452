@@ -56,11 +56,21 @@ gdp1 <- gdp %>%
   gather("Year","GDP",3:21) %>%
   arrange(desc(Year)) %>%
   arrange(Country.Name)  %>%
-  mutate(Year, Year = str_replace(Year, "X", "")) %>%
+  mutate(Year, Year = str_replace(Year, "X", "")) 
+
+
+gdp2 <- gdp1 %>%
   mutate ( Log_GDP = log(GDP)) %>%
   select(Country = Country.Name, Code = Country.Code, Year,Log_GDP) %>%
   filter(!Year %in% c(2000,2001,2002,2003,2004,2005))
 
+gdp1 %>% ggplot(aes(x= GDP)) + geom_histogram(stat="density",color="light blue", fill="light blue") + labs(title = "GDP - Before Preprocessing", x = "GDP")+
+  theme_minimal()
+
+gdp2 %>% ggplot(aes(x= Log_GDP)) + geom_histogram(stat="density",color="light blue", fill="light blue") + labs(title = "GDP - After Preprocessing", x = "Log GDP")+
+  theme_minimal()
+
+gdp1 <- gdp2
 
 nb1 <- nb %>%
   select (Country.Code , Country.Name, X2006:X2018) %>%
@@ -304,27 +314,27 @@ str(Xian)
 
 
 
-nb1 %>% ggplot(aes(x= NB)) + geom_histogram(color="blue", fill="light blue") + labs(title = "NB - Before Preprocessing", x = "NB")+
-  theme_minimal()
+nb1 %>% ggplot(aes(x= NB)) + geom_histogram( fill="light blue") + labs(title = "NB - Before Preprocessing", x = "NB")+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
-Xian %>% ggplot(aes(x=NB)) + geom_histogram(stat = "count",color="blue", fill="light blue") + labs(title = "NB - After Preprocessing", x = "NB Categories")+
-  theme_minimal()
+Xian %>% ggplot(aes(x=NB)) + geom_histogram(stat = "count", fill="light blue") + labs(title = "NB - After Preprocessing", x = "NB Categories")+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 Xian2 %>% filter(Country=="Eritrea") %>% ggplot( aes(x=Year, y=Percent_Urban_Population)) +
-  geom_bar(stat="identity", fill="steelblue")+ labs(title = "Percent_Urban_Population for Eritrea - Before  " , y = "Percent_Urban_Population")+
-  theme_minimal()
+  geom_bar(stat="identity", fill="steelblue")+ labs(title = "Percent_Urban_Population for Eritrea - Before  " , y = "Percent_Urban_Population")+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 Xian %>% filter(Country=="Eritrea") %>% ggplot( aes(x=Year, y=Percent_Urban_Population)) +
-  geom_bar(stat="identity", fill="steelblue")+ labs(title = "Percent_Urban_Population for Eritrea - After " , y = "Percent_Urban_Population")+
-  theme_minimal()
+  geom_bar(stat="identity", fill="steelblue")+ labs(title = "Percent_Urban_Population for Eritrea - After " , y = "Percent_Urban_Population")+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 Xian2 %>% filter(Country=="Malta") %>% ggplot( aes(x=Year, y=time_days)) +
-  geom_bar(stat="identity", fill=" green")+ labs(title = "Time(days) for Malta - Before " , y = "Time(days)")+
-  theme_minimal()
+  geom_bar(stat="identity",fill="steelblue")+ labs(title = "Time(days) for Malta - Before " , y = "Time(days)")+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 Xian %>% filter(Country=="Malta") %>% ggplot( aes(x=Year, y=time_days)) +
-  geom_bar(stat="identity", fill=" green")+labs(title = "Time(days) for Malta - After " , y = "Time(days)")+
-  theme_minimal()
+  geom_bar(stat="identity", fill="steelblue")+labs(title = "Time(days) for Malta - After " , y = "Time(days)")+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 
 ```
@@ -336,8 +346,6 @@ write.csv(Xian, file = "finaldf.csv")
 
 
 #Test and train data
-
-
 
 train_data <- Xian %>%
   filter(Year != "2019") %>%

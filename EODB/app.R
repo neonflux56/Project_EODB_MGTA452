@@ -91,8 +91,17 @@ body <- dashboardBody(
                     box(title = span('Map',style="font-size:20px"),leafletOutput("plot9"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
                     box(title = span('Urban Population Percentage',style="font-size:20px"),plotOutput("plot7"), height= 470,solidHeader = TRUE,width = 4,background = "black"),
                     box(title = span('GDP Trend',style="font-size:20px"),plotOutput("plot8"), height= 470,solidHeader = TRUE,width = 4,background = "black"))
+        ),
+        
+        #fourth
+        tabItem(tabName="moreinfo",
+                fluidRow(
+                    box(title= span('Contact Info',style="font-size:20px"),uiOutput("moreinfo1"),height = 150,width = 12,solidHeader = TRUE,status="primary"))
                 
-        )
+                )
+        
+        
+        
     ))
 
 
@@ -104,7 +113,17 @@ ui <- dashboardPage(header,sidebar,body,title = "Start-Up Global")
 
 server <- function(input, output){
     
-    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 'hp'),menuItem(text= span('Country Measure',style="font-size:18px"),tabName = "countryselect"),menuItem(text= span('Rank Measure',style="font-size:18px"),tabName = "rankselect")) })  
+    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 'hp'),menuItem(text= span('Country Measure',style="font-size:18px"),tabName = "countryselect"),menuItem(text= span('Rank Measure',style="font-size:18px"),tabName = "rankselect"),menuItem(text= span('Contact Info',style="font-size:18px"),tabName = "moreinfo") ) })  
+    
+    output$moreinfo1 <- renderUI({
+        HTML(paste("<p>","To get more details on this project, please visit the following link-","<br>"),
+             paste("<a href =","https://github.com/neonflux56/Project_EODB_MGTA452",">","Project on Github","</a>"),
+             paste("<p>","For further queries and suggestions, please contact through the below link-","<br>"),
+             paste("<a href =","https://ashishgupta.netlify.com/",">","Contact","</a>"))
+    })
+    
+    
+    
     
     
     output$projinfo <- renderUI({
