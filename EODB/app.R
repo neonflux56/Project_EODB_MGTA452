@@ -5,9 +5,6 @@
 
 require(devtools)
 
-
-
-
 require(tableHTML)
 require(shinythemes)
 require(shiny)
